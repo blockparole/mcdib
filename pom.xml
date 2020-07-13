@@ -10,8 +10,8 @@
     <packaging>jar</packaging>
 
     <name>mcdib</name>
-
     <description>discord two way bridge as paper plugin</description>
+
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -72,4 +72,5 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
 </project>
