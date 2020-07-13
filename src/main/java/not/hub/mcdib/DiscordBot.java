@@ -3,6 +3,7 @@ package not.hub.mcdib;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -10,6 +11,8 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.security.auth.login.LoginException;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 
 public class DiscordBot extends ListenerAdapter {
@@ -19,8 +22,8 @@ public class DiscordBot extends ListenerAdapter {
     // for a maximum of n ms (is there a discord connection timeout?)
     // but the mc thread will never get blocked by reading or writing the queues.
     // see BlockingQueue javadoc for read/write method explanation.
-    private final BlockingQueue<String> m2dQueue;
-    private final BlockingQueue<String> d2mQueue;
+    private final BlockingQueue<Message> m2dQueue;
+    private final BlockingQueue<Message> d2mQueue;
 
     private final Long bridgeChannelId;
     private final Set<Long> adminUserIds;
@@ -28,7 +31,7 @@ public class DiscordBot extends ListenerAdapter {
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<String> m2dQueue, BlockingQueue<String> d2mQueue, String token, Long bridgeChannelId, Set<Long> adminUserIds, Set<Long> adminRoleIds) {
+    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, Long bridgeChannelId, Set<Long> adminUserIds, Set<Long> adminRoleIds) {
 
         this.m2dQueue = m2dQueue;
         this.d2mQueue = d2mQueue;
@@ -81,6 +84,19 @@ public class DiscordBot extends ListenerAdapter {
             e.printStackTrace();
         }
 
+        // TODO: replace timer with observer pattern
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (m2dQueue.peek() == null) {
+                    return;
+                }
+                Message message = m2dQueue.poll();
+                jda.getTextChannelById(bridgeChannelId).sendMessage(message.formatToDiscord()).queue();
+            }
+        }, 0, 100);
+
         // this returns null if the queue was empty:
         // String testfrommc = m2dQueue.poll();
 
@@ -91,14 +107,14 @@ public class DiscordBot extends ListenerAdapter {
 
     public void shutdown() {
         jda.shutdown();
-        // TODO: ensure jda shutdown
     }
-
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot()) {
-            event.getChannel().sendMessage("pong").queue();
+        if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
+            if (!d2mQueue.offer(new Message(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
+                // TODO: warn in console
+            }
         }
     }
 

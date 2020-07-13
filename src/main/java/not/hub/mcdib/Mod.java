@@ -1,22 +1,26 @@
 package not.hub.mcdib;
 
 import com.google.common.collect.Sets;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public final class Mod extends JavaPlugin {
+public final class Mod extends JavaPlugin implements Listener {
 
     // m2dQueue & d2mQueue are used for inter thread communication.
     // they should be used in a way that the discord thread can be blocked
     // for a maximum of n ms (is there a discord connection timeout?)
     // but the mc thread will never get blocked by reading or writing the queues.
     // see BlockingQueue javadoc for read/write method explanation.
-    private final BlockingQueue<String> m2dQueue = new LinkedBlockingQueue<>();
-    private final BlockingQueue<String> d2mQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Message> m2dQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Message> d2mQueue = new LinkedBlockingQueue<>();
 
     private DiscordBot discordBot;
 
@@ -38,6 +42,23 @@ public final class Mod extends JavaPlugin {
         });
         botThread.start();
 
+        // TODO: replace timer with observer pattern
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (d2mQueue.peek() == null) {
+                    return;
+                }
+                Message message = d2mQueue.poll();
+                // TODO: use broadcast instead of players foreach?
+                getServer().getOnlinePlayers().forEach(player -> player.sendMessage(message.formatToMc()));
+            }
+        }, 0, 100);
+
+        // register mc chat listener
+        getServer().getPluginManager().registerEvents(this, this);
+
         // TODO: pipe mc chat to bot thread by filling m2dqueue via chat listener
         // this returns false if the element was not added (queue was full probably):
         // m2dQueue.offer("testfrommc");
@@ -46,6 +67,19 @@ public final class Mod extends JavaPlugin {
         // this returns null if the queue was empty:
         // String testfromdiscord = d2mQueue.poll();
 
+    }
+
+    @EventHandler
+    public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
+        getLogger().info("m2dQueue offer");
+        if (!m2dQueue.offer(new Message(event.getPlayer().getName(), event.getMessage()))) {
+            // TODO: warn in console
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        discordBot.shutdown();
     }
 
     private boolean initConfig() {
@@ -59,6 +93,8 @@ public final class Mod extends JavaPlugin {
         getConfig().addDefault("discord-admin-role-ids", Arrays.asList(DEFAULT_ID_VALUE, DEFAULT_ID_VALUE));
         getConfig().options().copyDefaults(true);
         saveConfig();
+
+        // TODO: token regex check for token & ids
 
         String token = getConfig().getString("discord-bot-auth-token");
         if (token == null || token.equals(DEFAULT_TOKEN_VALUE)) {
@@ -74,11 +110,6 @@ public final class Mod extends JavaPlugin {
 
         return true;
 
-    }
-
-    @Override
-    public void onDisable() {
-        discordBot.shutdown();
     }
 
 }
