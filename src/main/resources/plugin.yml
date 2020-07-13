@@ -1,0 +1,7 @@
+name: mcdib
+version: ${project.version}
+main: not.hub.mcdib.Mod
+api-version: 1.16
+prefix: MCDIB
+authors: [blockparole]
+description: discord two way bridge as paper plugin
