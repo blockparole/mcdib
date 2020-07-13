@@ -1,5 +1,6 @@
 package not.hub.mcdib;
 
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 public class DiscordBot {
@@ -12,10 +13,20 @@ public class DiscordBot {
     private final BlockingQueue<String> m2dQueue;
     private final BlockingQueue<String> d2mQueue;
 
-    public DiscordBot(String string, BlockingQueue<String> m2dQueue, BlockingQueue<String> d2mQueue) {
+    private final String token;
+    private final String channel;
+    private final Set<String> adminUsers;
+    private final Set<String> adminRoles;
+
+    public DiscordBot(BlockingQueue<String> m2dQueue, BlockingQueue<String> d2mQueue, String token, String channel, Set<String> adminUsers, Set<String> adminRoles) {
 
         this.m2dQueue = m2dQueue;
         this.d2mQueue = d2mQueue;
+
+        this.token = token;
+        this.channel = channel;
+        this.adminUsers = adminUsers;
+        this.adminRoles = adminRoles;
 
         // this returns null if the queue was empty:
         // String testfrommc = m2dQueue.poll();
