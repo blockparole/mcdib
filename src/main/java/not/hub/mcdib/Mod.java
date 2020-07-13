@@ -1,5 +1,6 @@
 package not.hub.mcdib;
 
+import com.google.common.collect.Sets;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
@@ -27,13 +28,13 @@ public final class Mod extends JavaPlugin {
             return;
         }
 
-        // run discord4j on second thread
+        // run jda on second thread
         Thread botThread = new Thread(() -> {
             discordBot = new DiscordBot(m2dQueue, d2mQueue,
                     getConfig().getString("discord-bot-auth-token"),
-                    getConfig().getString("discord-bridge-channel"),
-                    Collections.singleton(getConfig().getString("discord-admin-user-ids")),
-                    Collections.singleton(getConfig().getString("discord-admin-role-ids")));
+                    getConfig().getLong("discord-bridge-channel"),
+                    Sets.newHashSet(getConfig().getLongList("discord-admin-user-ids")),
+                    Sets.newHashSet(getConfig().getLongList("discord-admin-role-ids")));
         });
         botThread.start();
 
@@ -50,7 +51,7 @@ public final class Mod extends JavaPlugin {
     private boolean initConfig() {
 
         final String DEFAULT_TOKEN_VALUE = "AAAAAAAAAAAAAAAAAAAAAAAA.AAAAAA.AAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        final String DEFAULT_ID_VALUE = "000000000000000000";
+        final Long DEFAULT_ID_VALUE = 111111111111111111L;
 
         getConfig().addDefault("discord-bot-auth-token", DEFAULT_TOKEN_VALUE);
         getConfig().addDefault("discord-bridge-channel", DEFAULT_ID_VALUE);
@@ -65,9 +66,9 @@ public final class Mod extends JavaPlugin {
             return false;
         }
 
-        String channel = getConfig().getString("discord-bridge-channel");
-        if (channel == null || channel.equals(DEFAULT_ID_VALUE)) {
-            getLogger().warning("Please supply at least 1 bridge channel! mcdib shutting down...");
+        Long channel = getConfig().getLong("discord-bridge-channel");
+        if (channel.equals(DEFAULT_ID_VALUE)) {
+            getLogger().warning("Please supply a bridge channel id! mcdib shutting down...");
             return false;
         }
 
