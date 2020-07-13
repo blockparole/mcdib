@@ -4,6 +4,11 @@ import java.util.concurrent.BlockingQueue;
 
 public class DiscordBot {
 
+    // m2dQueue & d2mQueue are used for inter thread communication.
+    // they should be used in a way that the discord thread can be blocked
+    // for a maximum of n ms (is there a discord connection timeout?)
+    // but the mc thread will never get blocked by reading or writing the queues.
+    // see BlockingQueue javadoc for read/write method explanation.
     private final BlockingQueue<String> m2dQueue;
     private final BlockingQueue<String> d2mQueue;
 
