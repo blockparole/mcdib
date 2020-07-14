@@ -34,6 +34,9 @@ public class DiscordBot extends ListenerAdapter {
     private final List<Long> adminIds;
     private final char commandPrefix;
 
+    private Boolean m2dEnabled;
+    private Boolean d2mEnabled;
+
     private CommandProcessor commandProcessor;
 
     private JDA jda;
@@ -44,6 +47,9 @@ public class DiscordBot extends ListenerAdapter {
         this.bridgeChannelId = bridgeChannelId;
         this.adminIds = adminIds;
         this.commandPrefix = commandPrefix;
+
+        this.m2dEnabled = true;
+        this.d2mEnabled = true;
 
         try {
             jda = JDABuilder
@@ -79,7 +85,7 @@ public class DiscordBot extends ListenerAdapter {
                             // You must use ChunkingFilter.NONE if GUILD_MEMBERS is disabled.
                             // To enable chunking the discord api requires the privileged GUILD_MEMBERS intent.
                             // !Remove the related cache flag when using one of these events in the bot!
-                    ).setActivity(Activity.watching("\uD83D\uDC53 Block Game Conversations"))
+                    ).setActivity(Activity.watching("DC <-> MC"))
                     .addEventListeners(this)
                     .build();
             jda.awaitReady();
@@ -103,6 +109,7 @@ public class DiscordBot extends ListenerAdapter {
         this.commandProcessor = new CommandProcessor(bridgeChannel, this);
 
         // TODO: replace timer with observer pattern
+        // receive minecraft chat from mc thread
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -111,7 +118,9 @@ public class DiscordBot extends ListenerAdapter {
                     return;
                 }
                 ChatMessage chatMessage = m2dQueue.poll();
-                sendMessageToDiscord(chatMessage);
+                if (m2dEnabled) {
+                    sendMessageToDiscord(chatMessage);
+                }
             }
         }, 0, 100);
 
@@ -155,7 +164,7 @@ public class DiscordBot extends ListenerAdapter {
         }
 
         // relay discord chat to mc
-        if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
+        if (d2mEnabled && event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
             String message = event.getMessage().getContentRaw();
             if (ChatSanitizer.filterToMc(message).isEmpty()) return;
             if (!d2mQueue.offer(new ChatMessage(event.getAuthor().getName(), message))) {
@@ -178,12 +187,32 @@ public class DiscordBot extends ListenerAdapter {
         return commandProcessor;
     }
 
+    public char getCommandPrefix() {
+        return commandPrefix;
+    }
+
     public Long getBridgeChannelId() {
         return bridgeChannelId;
     }
 
     public BlockingQueue<ChatMessage> getD2mQueue() {
         return d2mQueue;
+    }
+
+    public boolean getM2dEnabled() {
+        return m2dEnabled;
+    }
+
+    public void setM2dEnabled(Boolean m2dEnabled) {
+        this.m2dEnabled = m2dEnabled;
+    }
+
+    public boolean getD2mEnabled() {
+        return d2mEnabled;
+    }
+
+    public void setD2mEnabled(Boolean d2mEnabled) {
+        this.d2mEnabled = d2mEnabled;
     }
 
 }

@@ -52,6 +52,7 @@ public final class Mod extends JavaPlugin implements Listener {
         botThread.start();
 
         // TODO: replace timer with observer pattern
+        // receive discord chat from discord thread
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
