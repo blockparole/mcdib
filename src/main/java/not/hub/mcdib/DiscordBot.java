@@ -81,7 +81,7 @@ public class DiscordBot extends ListenerAdapter {
             return;
         } catch (InterruptedException e) {
             e.printStackTrace();
-            Log.warn("Discord initialization failed! halting mcdib initialization...");
+            Log.warn("JDA initialization failed! halting mcdib initialization...");
             return;
         }
 
@@ -110,11 +110,12 @@ public class DiscordBot extends ListenerAdapter {
             }
         }, 0, 100);
 
-        Log.info("Initialization finished! Listening on to #" + channel.getName() + " on " + channel.getGuild().getName());
+        Log.info("Initialization finished! Listening to #" + channel.getName() + " on " + channel.getGuild().getName());
 
     }
 
     public void shutdown() {
+        Log.info("Shutting down JDA");
         jda.shutdown();
     }
 
@@ -122,7 +123,7 @@ public class DiscordBot extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
             if (!d2mQueue.offer(new Message(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
-                Log.warn("unable to insert discord message into minecraft send queue, message dropped...");
+                Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped...");
             }
         }
     }

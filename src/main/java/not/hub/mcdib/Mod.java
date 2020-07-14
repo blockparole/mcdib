@@ -53,12 +53,9 @@ public final class Mod extends JavaPlugin implements Listener {
         }
 
         // run jda on second thread
-        Thread botThread = new Thread(() -> {
-            discordBot = new DiscordBot(m2dQueue, d2mQueue,
-                    getConfig().getString("discord-bot-auth-token"),
-                    getConfig().getLong("discord-bridge-channel")
-            );
-        });
+        Thread botThread = new Thread(() -> discordBot = new DiscordBot(m2dQueue, d2mQueue,
+                getConfig().getString("discord-bot-auth-token"),
+                getConfig().getLong("discord-bridge-channel")));
         botThread.start();
 
         // TODO: replace timer with observer pattern
@@ -83,14 +80,14 @@ public final class Mod extends JavaPlugin implements Listener {
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
         if (!m2dQueue.offer(new Message(event.getPlayer().getName(), event.getMessage()))) {
-            Log.warn("unable to insert minecraft message into discord send queue, message dropped...");
+            Log.warn("Unable to insert Minecraft message into Discord send queue, message dropped...");
         }
     }
 
     @Override
     public void onDisable() {
-        Log.info("Shutting down mcdib");
         discordBot.shutdown();
+        Log.info("Shutdown finished");
     }
 
     private boolean initConfig() {

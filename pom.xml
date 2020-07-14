@@ -6,11 +6,11 @@
 
     <groupId>not.hub</groupId>
     <artifactId>mcdib</artifactId>
-    <version>0.0.0</version>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
 
     <name>mcdib</name>
-    <description>discord two way bridge as paper plugin</description>
+    <description>discord duplex bridge as paper plugin</description>
 
     <properties>
         <java.version>1.8</java.version>
