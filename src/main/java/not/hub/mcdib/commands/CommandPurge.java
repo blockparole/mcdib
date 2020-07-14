@@ -9,13 +9,13 @@ public class CommandPurge extends Command {
 
     // TODO: Command: purge chat history (argument: number of messages) or (argument: timestamp start deleterange)
 
-    public CommandPurge(TextChannel channel, DiscordBot discordBot) {
-        super("purge", 1, 1, channel, discordBot);
+    public CommandPurge(DiscordBot discordBot) {
+        super("purge", "purge messages in bridge channel", 1, 1, discordBot);
     }
 
     @Override
     public void run(List<String> args) {
-        sendMessageToDiscord("Hi there, you ran the purge command: " + args.toString());
+        sendToDiscord("Hi there, you ran the purge command: " + args.toString() + " This Command is not implemented yet. :(");
     }
 
 }

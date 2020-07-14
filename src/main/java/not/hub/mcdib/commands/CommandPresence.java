@@ -11,8 +11,8 @@ public class CommandPresence extends Command {
 
     // TODO: Command: Change Bot presence text & type
 
-    public CommandPresence(TextChannel channel, DiscordBot discordBot) {
-        super("presence", 1, 64, channel, discordBot);
+    public CommandPresence(DiscordBot discordBot) {
+        super("presence", "change bot presence text", 1, 64, discordBot);
     }
 
     @Override

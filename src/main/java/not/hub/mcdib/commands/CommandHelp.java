@@ -10,13 +10,31 @@ public class CommandHelp extends Command {
 
     // TODO: Command: Help Command (List of Commands & Arguments)
 
-    public CommandHelp(TextChannel channel, DiscordBot discordBot) {
-        super("help", 0, 0, channel, discordBot);
+    public CommandHelp(DiscordBot discordBot) {
+        super("help", "get some help", 0, 1, discordBot);
     }
 
     @Override
     public void run(List<String> args) {
-        sendMessageToDiscord("Commands: " + getBot().getCommandProcessor().getCommands().stream().map(Command::getName).collect(Collectors.joining(", ")));
+        if (args.size() == 0) {
+            sendToDiscord("Commands: " + getBot().getCommandProcessor().getCommands().stream().map(Command::getName).collect(Collectors.joining(", ")));
+        } else {
+            StringBuilder sb = new StringBuilder();
+            getBot().getCommandProcessor().getCommands().stream().filter(command -> command.getName().toLowerCase().equals(args.get(0).toLowerCase())).findFirst().ifPresent(command -> {
+                sb
+                        .append("Name: ")
+                        .append(command.getName())
+                        .append("\n")
+                        .append("Args: ")
+                        .append(command.getMinArgs())
+                        .append("-")
+                        .append(command.getMaxArgs())
+                        .append("\n")
+                        .append("Description: ")
+                        .append(command.getDescription());
+            });
+            sendToDiscord(sb.toString());
+        }
     }
 
 }

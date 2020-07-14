@@ -1,6 +1,5 @@
 package not.hub.mcdib.commands;
 
-import net.dv8tion.jda.api.entities.TextChannel;
 import not.hub.mcdib.DiscordBot;
 import not.hub.mcdib.util.Message;
 
@@ -8,20 +7,20 @@ import java.util.List;
 
 public abstract class Command {
 
-    public final String name;
+    private final String name;
+    private final String description;
 
     // TODO: replace min and max ints with int ranges so we can have commands with dynamic arg count
-    public final int minArgs;
-    public final int maxArgs;
+    private final int minArgs;
+    private final int maxArgs;
 
-    private final TextChannel channel;
     private final DiscordBot bot;
 
-    public Command(String name, int minArgs, int maxArgs, TextChannel channel, DiscordBot bot) {
+    public Command(String name, String description, int minArgs, int maxArgs, DiscordBot bot) {
         this.name = name;
+        this.description = description;
         this.minArgs = minArgs;
         this.maxArgs = maxArgs;
-        this.channel = channel;
         this.bot = bot;
     }
 
@@ -44,20 +43,16 @@ public abstract class Command {
         return name.hashCode();
     }
 
-    public void sendMessageToDiscord(String message) {
+    public void sendToDiscord(String message) {
         bot.sendMessageToDiscord(new Message("\uD83E\uDD16", message));
-    }
-
-    DiscordBot getBot() {
-        return bot;
-    }
-
-    TextChannel getChannel() {
-        return channel;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public int getMinArgs() {
@@ -66,6 +61,10 @@ public abstract class Command {
 
     public int getMaxArgs() {
         return maxArgs;
+    }
+
+    DiscordBot getBot() {
+        return bot;
     }
 
 }

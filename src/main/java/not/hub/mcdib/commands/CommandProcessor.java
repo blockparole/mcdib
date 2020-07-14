@@ -14,22 +14,25 @@ public class CommandProcessor {
 
     public CommandProcessor(TextChannel channel, DiscordBot discordBot) {
         commands = new HashSet<>();
-        loadCommands(channel, discordBot);
+        // TODO: remove circular dependency commands have for discordBot
+        loadCommands(discordBot);
     }
 
-    private void loadCommands(TextChannel channel, DiscordBot discordBot) {
-        commands.add(new CommandHelp(channel, discordBot));
-        commands.add(new CommandPresence(channel, discordBot));
-        commands.add(new CommandPurge(channel, discordBot));
-        commands.add(new CommandRelay(channel, discordBot));
+    private void loadCommands(DiscordBot discordBot) {
+        commands.add(new CommandHelp(discordBot));
+        commands.add(new CommandPresence(discordBot));
+        commands.add(new CommandPurge(discordBot));
+        commands.add(new CommandRelay(discordBot));
+        commands.add(new CommandSlowmode(discordBot));
+        commands.add(new CommandTellraw(discordBot));
     }
 
     public void processCommand(String command, List<String> args) {
         Log.info("Detected command: " + command + " with arguments: " + args.toString());
         commands.stream().filter(com ->
-                com.name.toLowerCase().equals(command.toLowerCase())
-                        && com.minArgs <= args.size()
-                        && com.maxArgs >= args.size()
+                com.getName().toLowerCase().equals(command.toLowerCase())
+                        && com.getMinArgs() <= args.size()
+                        && com.getMaxArgs() >= args.size()
         ).findFirst().ifPresent(com -> com.run(args));
     }
 
