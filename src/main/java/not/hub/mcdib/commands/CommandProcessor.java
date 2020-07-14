@@ -20,6 +20,7 @@ public class CommandProcessor {
 
     private void loadCommands(DiscordBot discordBot) {
         commands.add(new CommandHelp(discordBot));
+        commands.add(new CommandMcPos(discordBot));
         commands.add(new CommandPresence(discordBot));
         commands.add(new CommandPurge(discordBot));
         commands.add(new CommandRelay(discordBot));

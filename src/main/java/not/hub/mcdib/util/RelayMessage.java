@@ -1,11 +1,11 @@
 package not.hub.mcdib.util;
 
-public class Message {
+public class RelayMessage {
 
     final String sender;
     final String message;
 
-    public Message(String sender, String message) {
+    public RelayMessage(String sender, String message) {
         this.sender = sender;
         this.message = message;
     }

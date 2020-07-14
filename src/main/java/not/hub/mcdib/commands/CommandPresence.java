@@ -9,8 +9,6 @@ import java.util.List;
 
 public class CommandPresence extends Command {
 
-    // TODO: Command: Change Bot presence text & type
-
     public CommandPresence(DiscordBot discordBot) {
         super("presence", "change bot presence text", 1, 64, discordBot);
     }

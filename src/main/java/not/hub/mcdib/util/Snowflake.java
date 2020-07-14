@@ -4,12 +4,35 @@ public class Snowflake {
 
     private final long id;
 
-    public Snowflake(final long id) {
-        this.id = id;
+    public Snowflake(final long id) throws InvalidSnowflakeIdValueException {
+        if (validateSnowflakeFormat(id)) {
+            this.id = id;
+        } else {
+            throw new InvalidSnowflakeIdValueException("Invalid Input for Snowflake=" + id);
+        }
     }
 
-    public Snowflake(final String id) {
-        this.id = Long.parseUnsignedLong(id);
+    public Snowflake(final String id) throws InvalidSnowflakeIdValueException {
+        if (!validateSnowflakeFormat(id)) {
+            throw new InvalidSnowflakeIdValueException("Invalid Input for Snowflake=" + id);
+        }
+        try {
+            this.id = Long.parseUnsignedLong(id);
+        } catch (NumberFormatException e) {
+            throw new InvalidSnowflakeIdValueException("Invalid Input for Snowflake=" + id);
+        }
+    }
+
+    private static boolean validateSnowflakeFormat(String id) {
+        try {
+            return validateSnowflakeFormat(Long.parseLong(id));
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private static boolean validateSnowflakeFormat(long id) {
+        return (int) (Math.log10(id) + 1) == 18;
     }
 
     public static long asLong(final Snowflake snowflake) {
@@ -40,6 +63,12 @@ public class Snowflake {
     @Override
     public int hashCode() {
         return (int) (id ^ (id >>> 32));
+    }
+
+    public static class InvalidSnowflakeIdValueException extends Exception {
+        public InvalidSnowflakeIdValueException(String message) {
+            super(message);
+        }
     }
 
 }

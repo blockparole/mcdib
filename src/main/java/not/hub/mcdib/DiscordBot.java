@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import not.hub.mcdib.commands.CommandProcessor;
 import not.hub.mcdib.util.ChatSanitizer;
 import not.hub.mcdib.util.Log;
-import not.hub.mcdib.util.Message;
+import not.hub.mcdib.util.RelayMessage;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
@@ -28,7 +28,7 @@ public class DiscordBot extends ListenerAdapter {
     // TODO: Automatic Slow Mode for bridge channel on spam (possible?)
     // TODO: Automatic message drop on spam (with prior announcement) (message rate threshold?)
 
-    private final BlockingQueue<Message> d2mQueue;
+    private final BlockingQueue<RelayMessage> d2mQueue;
     private final Long bridgeChannelId;
     private final List<Long> adminIds;
     private final char commandPrefix;
@@ -37,7 +37,7 @@ public class DiscordBot extends ListenerAdapter {
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
+    public DiscordBot(BlockingQueue<RelayMessage> m2dQueue, BlockingQueue<RelayMessage> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
 
         this.d2mQueue = d2mQueue;
         this.bridgeChannelId = bridgeChannelId;
@@ -109,8 +109,8 @@ public class DiscordBot extends ListenerAdapter {
                 if (m2dQueue.peek() == null) {
                     return;
                 }
-                Message message = m2dQueue.poll();
-                sendMessageToDiscord(message);
+                RelayMessage relayMessage = m2dQueue.poll();
+                sendMessageToDiscord(relayMessage);
             }
         }, 0, 100);
 
@@ -118,13 +118,13 @@ public class DiscordBot extends ListenerAdapter {
 
     }
 
-    public void sendMessageToDiscord(Message message) {
+    public void sendMessageToDiscord(RelayMessage relayMessage) {
         TextChannel channel = jda.getTextChannelById(bridgeChannelId);
         if (channel == null) {
             Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")!");
             return;
         }
-        channel.sendMessage(ChatSanitizer.formatToDiscord(message)).queue();
+        channel.sendMessage(ChatSanitizer.formatToDiscord(relayMessage)).queue();
     }
 
     // This wont fire if the server is not stopped normally (process killed etc.)
@@ -155,7 +155,7 @@ public class DiscordBot extends ListenerAdapter {
 
         // relay discord chat to mc
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
-            if (!d2mQueue.offer(new Message(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
+            if (!d2mQueue.offer(new RelayMessage(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
                 Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped...");
             }
         }
@@ -168,6 +168,10 @@ public class DiscordBot extends ListenerAdapter {
 
     public CommandProcessor getCommandProcessor() {
         return commandProcessor;
+    }
+
+    public Long getBridgeChannelId() {
+        return bridgeChannelId;
     }
 
 }

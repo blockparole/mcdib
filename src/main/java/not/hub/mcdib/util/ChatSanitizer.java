@@ -2,13 +2,13 @@ package not.hub.mcdib.util;
 
 public class ChatSanitizer {
 
-    public static String formatToMc(Message message) {
-        String out = "<DC:" + filterToMc(message.sender) + "> " + filterToMc(message.message);
+    public static String formatToMc(RelayMessage relayMessage) {
+        String out = "<DC:" + filterToMc(relayMessage.sender) + "> " + filterToMc(relayMessage.message);
         return out.substring(0, Math.min(out.length(), 256));
     }
 
-    public static String formatToDiscord(Message message) {
-        String out = filterToDiscord(message.sender) + "```" + "\n" + filterToDiscord(message.message); // System.lineSeparator() causes discord to show 2 linebreaks on mobile
+    public static String formatToDiscord(RelayMessage relayMessage) {
+        String out = filterToDiscord(relayMessage.sender) + "```" + "\n" + filterToDiscord(relayMessage.message); // System.lineSeparator() causes discord to show 2 linebreaks on mobile
         return out.substring(0, Math.min(out.length(), 2000 - 3)) + "```"; // in case someone manages to send 2k char messages
     }
 

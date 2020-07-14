@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 
 public class CommandHelp extends Command {
 
-    // TODO: Command: Help Command (List of Commands & Arguments)
-
     public CommandHelp(DiscordBot discordBot) {
         super("help", "get some help", 0, 1, discordBot);
     }
