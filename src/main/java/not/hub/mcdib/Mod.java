@@ -38,6 +38,7 @@ public final class Mod extends JavaPlugin implements Listener {
     // for a maximum of n ms (is there a discord connection timeout?)
     // but the mc thread will never get blocked by reading or writing the queues.
     // see BlockingQueue javadoc for read/write method explanation.
+    // !m2dQueue & d2mQueue are the only gates of communication to use between the threads!
     private static final int QUEUE_CAPACITY = 100;
     private final BlockingQueue<Message> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     private final BlockingQueue<Message> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
@@ -67,8 +68,7 @@ public final class Mod extends JavaPlugin implements Listener {
                     return;
                 }
                 Message message = d2mQueue.poll();
-                // TODO: use broadcast instead of players foreach? (does this spam console?)
-                getServer().getOnlinePlayers().forEach(player -> player.sendMessage(message.formatToMc()));
+                sendMessageToMinecraft(message);
             }
         }, 0, 100);
 
@@ -88,6 +88,11 @@ public final class Mod extends JavaPlugin implements Listener {
     public void onDisable() {
         discordBot.shutdown();
         Log.info("Shutdown finished");
+    }
+
+    private void sendMessageToMinecraft(Message message) {
+        // TODO: use broadcast instead of players foreach? (does this spam console?)
+        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(message.formatToMc()));
     }
 
     private boolean initConfig() {

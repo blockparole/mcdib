@@ -16,7 +16,7 @@ public class Message {
     }
 
     public String formatToDiscord() {
-        String out = sender + "```" + System.lineSeparator() + filter(message);
+        String out = sender + "```" + "\n" + filter(message); // System.lineSeparator() causes discord to show 2 linebreaks on mobile
         return out.substring(0, Math.min(out.length(), 2000 - 3)) + "```"; // in case someone manages to send 2k char messages
     }
 

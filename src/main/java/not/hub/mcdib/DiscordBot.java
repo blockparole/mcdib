@@ -19,8 +19,6 @@ import java.util.concurrent.BlockingQueue;
 
 public class DiscordBot extends ListenerAdapter {
 
-    // TODO: add thread internal queue to be used buffer in case d2mQueue is full
-
     private final BlockingQueue<Message> d2mQueue;
     private final Long bridgeChannelId;
 
@@ -28,11 +26,6 @@ public class DiscordBot extends ListenerAdapter {
 
     public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, Long bridgeChannelId) {
 
-        // m2dQueue & d2mQueue are used for inter thread communication.
-        // they should be used in a way that the discord thread can be blocked
-        // for a maximum of n ms (is there a discord connection timeout?)
-        // but the mc thread will never get blocked by reading or writing the queues.
-        // see BlockingQueue javadoc for read/write method explanation.
         this.d2mQueue = d2mQueue;
         this.bridgeChannelId = bridgeChannelId;
 
@@ -41,17 +34,16 @@ public class DiscordBot extends ListenerAdapter {
                     .createDefault(token)
                     .disableCache(
                             // https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/utils/cache/CacheFlag.html
-                            // Cache is disabled by the following flags:
+                            // Caches are disabled by the following flags:
                             CacheFlag.ACTIVITY,                     // getActivities()
                             CacheFlag.CLIENT_STATUS,                // getOnlineStatus()
                             CacheFlag.EMOTE,                        // getEmoteCache()
                             CacheFlag.MEMBER_OVERRIDES,             // getMemberPermissionOverrides()
                             CacheFlag.VOICE_STATE                   // getVoiceState()
-                            // Remove the related cache flag when using one of these methods in the bot!
-                    )
-                    .disableIntents(
+                            // !Remove the related cache flag when using one of these methods in the bot!
+                    ).disableIntents(
                             // https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/requests/GatewayIntent.html
-                            // Gateway Events are disabled by the following flags:
+                            // Gateway Intent Events are disabled by the following flags:
                             GatewayIntent.GUILD_MEMBERS,            // This is a privileged gateway intent that is used to update user information and join/leaves (including kicks). This is required to cache all members of a guild (including chunking)
                             GatewayIntent.GUILD_BANS,               // This will only track guild bans and unbans
                             GatewayIntent.GUILD_EMOJIS,             // This will only track guild emote create/modify/delete. Most bots don't need this since they just use the emote id anyway.
@@ -70,8 +62,8 @@ public class DiscordBot extends ListenerAdapter {
                             // or enable it in the developer dashboard of your application.
                             // You must use ChunkingFilter.NONE if GUILD_MEMBERS is disabled.
                             // To enable chunking the discord api requires the privileged GUILD_MEMBERS intent.
-                    )
-                    .setActivity(Activity.watching("\uD83D\uDC53 Block Game Conversations"))
+                            // !Remove the related cache flag when using one of these events in the bot!
+                    ).setActivity(Activity.watching("\uD83D\uDC53 Block Game Conversations"))
                     .addEventListeners(this)
                     .build();
             jda.awaitReady();
@@ -101,19 +93,24 @@ public class DiscordBot extends ListenerAdapter {
                     return;
                 }
                 Message message = m2dQueue.poll();
-                TextChannel channel = jda.getTextChannelById(bridgeChannelId);
-                if (channel == null) {
-                    Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")!");
-                    return;
-                }
-                channel.sendMessage(message.formatToDiscord()).queue();
+                sendMessageToDiscord(message);
             }
         }, 0, 100);
 
-        Log.info("Initialization finished! Listening to #" + channel.getName() + " on " + channel.getGuild().getName());
+        Log.info("Initialization finished! Bridge channel is #" + channel.getName() + " on " + channel.getGuild().getName());
 
     }
 
+    private void sendMessageToDiscord(Message message) {
+        TextChannel channel = jda.getTextChannelById(bridgeChannelId);
+        if (channel == null) {
+            Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")!");
+            return;
+        }
+        channel.sendMessage(message.formatToDiscord()).queue();
+    }
+
+    // This wont fire if the server is not stopped normally (process killed etc.)
     public void shutdown() {
         Log.info("Shutting down JDA");
         jda.shutdown();
