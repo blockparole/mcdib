@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.ChannelType;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -12,7 +13,6 @@ import not.hub.mcdib.util.Log;
 import not.hub.mcdib.util.Message;
 
 import javax.security.auth.login.LoginException;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
@@ -21,28 +21,20 @@ public class DiscordBot extends ListenerAdapter {
 
     // TODO: add thread internal queue to be used buffer in case d2mQueue is full
 
-    // m2dQueue & d2mQueue are used for inter thread communication.
-    // they should be used in a way that the discord thread can be blocked
-    // for a maximum of n ms (is there a discord connection timeout?)
-    // but the mc thread will never get blocked by reading or writing the queues.
-    // see BlockingQueue javadoc for read/write method explanation.
-    private final BlockingQueue<Message> m2dQueue;
     private final BlockingQueue<Message> d2mQueue;
-
     private final Long bridgeChannelId;
-    private final Set<Long> adminUserIds;
-    private final Set<Long> adminRoleIds;
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, Long bridgeChannelId, Set<Long> adminUserIds, Set<Long> adminRoleIds) {
+    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, Long bridgeChannelId) {
 
-        this.m2dQueue = m2dQueue;
+        // m2dQueue & d2mQueue are used for inter thread communication.
+        // they should be used in a way that the discord thread can be blocked
+        // for a maximum of n ms (is there a discord connection timeout?)
+        // but the mc thread will never get blocked by reading or writing the queues.
+        // see BlockingQueue javadoc for read/write method explanation.
         this.d2mQueue = d2mQueue;
-
         this.bridgeChannelId = bridgeChannelId;
-        this.adminUserIds = adminUserIds;
-        this.adminRoleIds = adminRoleIds;
 
         try {
             jda = JDABuilder
@@ -84,12 +76,19 @@ public class DiscordBot extends ListenerAdapter {
                     .build();
             jda.awaitReady();
 
-        } catch (LoginException | InterruptedException e) {
+        } catch (LoginException e) {
+            Log.warn("Discord login failed! halting mcdib initialization...");
+            return;
+        } catch (InterruptedException e) {
             e.printStackTrace();
+            Log.warn("Discord initialization failed! halting mcdib initialization...");
+            return;
         }
 
-        if (jda.getTextChannelById(bridgeChannelId) == null) {
-            Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")! mcdib shutting down...");
+        TextChannel channel = jda.getTextChannelById(bridgeChannelId);
+
+        if (channel == null) {
+            Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")! halting mcdib initialization...");
             return;
         }
 
@@ -102,15 +101,16 @@ public class DiscordBot extends ListenerAdapter {
                     return;
                 }
                 Message message = m2dQueue.poll();
-                jda.getTextChannelById(bridgeChannelId).sendMessage(message.formatToDiscord()).queue();
+                TextChannel channel = jda.getTextChannelById(bridgeChannelId);
+                if (channel == null) {
+                    Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")!");
+                    return;
+                }
+                channel.sendMessage(message.formatToDiscord()).queue();
             }
         }, 0, 100);
 
-        // this returns null if the queue was empty:
-        // String testfrommc = m2dQueue.poll();
-
-        // this returns false if the element was not added (queue was full probably):
-        // d2mQueue.offer("testfromdiscord");
+        Log.info("Initialization finished! Listening on to #" + channel.getName() + " on " + channel.getGuild().getName());
 
     }
 
@@ -121,7 +121,6 @@ public class DiscordBot extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
-            Log.info("d2mQueue offer");
             if (!d2mQueue.offer(new Message(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
                 Log.warn("unable to insert discord message into minecraft send queue, message dropped...");
             }

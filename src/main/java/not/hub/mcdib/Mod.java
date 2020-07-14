@@ -1,6 +1,5 @@
 package not.hub.mcdib;
 
-import com.google.common.collect.Sets;
 import not.hub.mcdib.util.Log;
 import not.hub.mcdib.util.Message;
 import org.bukkit.event.EventHandler;
@@ -17,6 +16,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 public final class Mod extends JavaPlugin implements Listener {
 
     // TODO: Command System
+    // TODO: Use for command auth:
+    // Sets.newHashSet(getConfig().getLongList("discord-admin-user-ids"))
+    // Sets.newHashSet(getConfig().getLongList("discord-admin-role-ids"))
+
     // TODO: Command: Help Command (List of Commands & Arguments)
     // TODO: Command: Change Bot presence text & type
     // TODO: Command: purge chat history (argument: number of messages) or (argument: timestamp start deleterange)
@@ -28,7 +31,7 @@ public final class Mod extends JavaPlugin implements Listener {
 
     // TODO: add thread internal queue to be used buffer in case m2dQueue is full
 
-    // TODO: write javadoc
+    // TODO: write javadoc and replace scattered comments
 
     // m2dQueue & d2mQueue are used for inter thread communication.
     // they should be used in a way that the discord thread can be blocked
@@ -53,9 +56,8 @@ public final class Mod extends JavaPlugin implements Listener {
         Thread botThread = new Thread(() -> {
             discordBot = new DiscordBot(m2dQueue, d2mQueue,
                     getConfig().getString("discord-bot-auth-token"),
-                    getConfig().getLong("discord-bridge-channel"),
-                    Sets.newHashSet(getConfig().getLongList("discord-admin-user-ids")),
-                    Sets.newHashSet(getConfig().getLongList("discord-admin-role-ids")));
+                    getConfig().getLong("discord-bridge-channel")
+            );
         });
         botThread.start();
 
@@ -80,7 +82,6 @@ public final class Mod extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
-        Log.info("m2dQueue offer");
         if (!m2dQueue.offer(new Message(event.getPlayer().getName(), event.getMessage()))) {
             Log.warn("unable to insert minecraft message into discord send queue, message dropped...");
         }
@@ -88,10 +89,13 @@ public final class Mod extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        Log.info("Shutting down mcdib");
         discordBot.shutdown();
     }
 
     private boolean initConfig() {
+
+        Log.info("Processing config");
 
         final String DEFAULT_TOKEN_VALUE = "AAAAAAAAAAAAAAAAAAAAAAAA.AAAAAA.AAAAAAAAAAAAAAAAAAAAAAAAAAA";
         final Long DEFAULT_ID_VALUE = 111111111111111111L;
@@ -107,13 +111,13 @@ public final class Mod extends JavaPlugin implements Listener {
 
         String token = getConfig().getString("discord-bot-auth-token");
         if (token == null || token.equals(DEFAULT_TOKEN_VALUE)) {
-            Log.warn("Please supply a bot token! mcdib shutting down...");
+            Log.warn("Please supply a bot token! halting mcdib initialization...");
             return false;
         }
 
         Long channel = getConfig().getLong("discord-bridge-channel");
         if (channel.equals(DEFAULT_ID_VALUE)) {
-            Log.warn("Please supply a bridge channel id! mcdib shutting down...");
+            Log.warn("Please supply a bridge channel id! halting mcdib initialization...");
             return false;
         }
 
