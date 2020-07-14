@@ -1,7 +1,7 @@
 package not.hub.mcdib.commands;
 
 import not.hub.mcdib.DiscordBot;
-import not.hub.mcdib.util.RelayMessage;
+import not.hub.mcdib.message.ChatMessage;
 
 import java.util.List;
 
@@ -44,7 +44,7 @@ public abstract class Command {
     }
 
     public void sendToDiscord(String message) {
-        bot.sendMessageToDiscord(new RelayMessage("\uD83E\uDD16", message));
+        bot.sendMessageToDiscord(new ChatMessage("\uD83E\uDD16", message));
     }
 
     public String getName() {

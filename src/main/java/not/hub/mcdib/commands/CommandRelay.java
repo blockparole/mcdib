@@ -1,6 +1,5 @@
 package not.hub.mcdib.commands;
 
-import net.dv8tion.jda.api.entities.TextChannel;
 import not.hub.mcdib.DiscordBot;
 
 import java.util.List;

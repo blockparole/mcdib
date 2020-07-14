@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -12,7 +13,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import not.hub.mcdib.commands.CommandProcessor;
 import not.hub.mcdib.util.ChatSanitizer;
 import not.hub.mcdib.util.Log;
-import not.hub.mcdib.util.RelayMessage;
+import not.hub.mcdib.message.ChatMessage;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
@@ -28,7 +29,7 @@ public class DiscordBot extends ListenerAdapter {
     // TODO: Automatic Slow Mode for bridge channel on spam (possible?)
     // TODO: Automatic message drop on spam (with prior announcement) (message rate threshold?)
 
-    private final BlockingQueue<RelayMessage> d2mQueue;
+    private final BlockingQueue<ChatMessage> d2mQueue;
     private final Long bridgeChannelId;
     private final List<Long> adminIds;
     private final char commandPrefix;
@@ -37,7 +38,7 @@ public class DiscordBot extends ListenerAdapter {
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<RelayMessage> m2dQueue, BlockingQueue<RelayMessage> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
+    public DiscordBot(BlockingQueue<ChatMessage> m2dQueue, BlockingQueue<ChatMessage> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
 
         this.d2mQueue = d2mQueue;
         this.bridgeChannelId = bridgeChannelId;
@@ -109,8 +110,8 @@ public class DiscordBot extends ListenerAdapter {
                 if (m2dQueue.peek() == null) {
                     return;
                 }
-                RelayMessage relayMessage = m2dQueue.poll();
-                sendMessageToDiscord(relayMessage);
+                ChatMessage chatMessage = m2dQueue.poll();
+                sendMessageToDiscord(chatMessage);
             }
         }, 0, 100);
 
@@ -118,13 +119,13 @@ public class DiscordBot extends ListenerAdapter {
 
     }
 
-    public void sendMessageToDiscord(RelayMessage relayMessage) {
+    public void sendMessageToDiscord(ChatMessage chatMessage) {
         TextChannel channel = jda.getTextChannelById(bridgeChannelId);
         if (channel == null) {
             Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")!");
             return;
         }
-        channel.sendMessage(ChatSanitizer.formatToDiscord(relayMessage)).queue();
+        channel.sendMessage(ChatSanitizer.formatToDiscord(chatMessage)).queue();
     }
 
     // This wont fire if the server is not stopped normally (process killed etc.)
@@ -144,10 +145,10 @@ public class DiscordBot extends ListenerAdapter {
             if (!raw.isEmpty() && raw.charAt(0) == commandPrefix && raw.length() > 1) {
                 List<String> messageElements = Arrays.asList(raw.substring(1).split(" "));
                 if (messageElements.size() == 1) {
-                    commandProcessor.processCommand(messageElements.get(0), Collections.emptyList());
+                    runCommand(messageElements.get(0), Collections.emptyList(), event.getAuthor());
                     return;
                 } else if (messageElements.size() > 1) {
-                    commandProcessor.processCommand(messageElements.get(0), messageElements.subList(1, messageElements.size()));
+                    runCommand(messageElements.get(0), messageElements.subList(1, messageElements.size()), event.getAuthor());
                     return;
                 }
             }
@@ -155,11 +156,16 @@ public class DiscordBot extends ListenerAdapter {
 
         // relay discord chat to mc
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
-            if (!d2mQueue.offer(new RelayMessage(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
+            if (!d2mQueue.offer(new ChatMessage(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
                 Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped...");
             }
         }
 
+    }
+
+    private void runCommand(String command, List<String> args, User author) {
+        Log.info(author.getName() + " (" + author.getIdLong() + ") issued command: " + command + " with arguments: " + args.toString());
+        commandProcessor.processCommand(command, args);
     }
 
     public JDA getJda() {
@@ -172,6 +178,10 @@ public class DiscordBot extends ListenerAdapter {
 
     public Long getBridgeChannelId() {
         return bridgeChannelId;
+    }
+
+    public BlockingQueue<ChatMessage> getD2mQueue() {
+        return d2mQueue;
     }
 
 }

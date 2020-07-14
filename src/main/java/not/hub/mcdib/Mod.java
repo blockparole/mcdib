@@ -1,8 +1,8 @@
 package not.hub.mcdib;
 
+import not.hub.mcdib.message.ChatMessage;
 import not.hub.mcdib.util.ChatSanitizer;
 import not.hub.mcdib.util.Log;
-import not.hub.mcdib.util.RelayMessage;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -26,8 +26,8 @@ public final class Mod extends JavaPlugin implements Listener {
     // see BlockingQueue javadoc for read/write method explanation.
     // !m2dQueue & d2mQueue are the only gates of communication to use between the threads!
     private static final int QUEUE_CAPACITY = 100;
-    private final BlockingQueue<RelayMessage> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
-    private final BlockingQueue<RelayMessage> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    private final BlockingQueue<ChatMessage> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    private final BlockingQueue<ChatMessage> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
 
     private DiscordBot discordBot;
 
@@ -59,8 +59,8 @@ public final class Mod extends JavaPlugin implements Listener {
                 if (d2mQueue.peek() == null) {
                     return;
                 }
-                RelayMessage relayMessage = d2mQueue.poll();
-                sendMessageToMinecraft(relayMessage);
+                ChatMessage chatMessage = d2mQueue.poll();
+                sendMessageToMinecraft(chatMessage);
             }
         }, 0, 100);
 
@@ -72,7 +72,7 @@ public final class Mod extends JavaPlugin implements Listener {
     // relay mc chat to discord
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
-        if (!m2dQueue.offer(new RelayMessage(event.getPlayer().getName(), event.getMessage()))) {
+        if (!m2dQueue.offer(new ChatMessage(event.getPlayer().getName(), event.getMessage()))) {
             Log.warn("Unable to insert Minecraft message into Discord send queue, message dropped...");
         }
     }
@@ -84,9 +84,9 @@ public final class Mod extends JavaPlugin implements Listener {
         Log.info("Shutdown finished");
     }
 
-    private void sendMessageToMinecraft(RelayMessage relayMessage) {
+    private void sendMessageToMinecraft(ChatMessage chatMessage) {
         // TODO: use broadcast instead of players foreach? (does this spam console?)
-        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(ChatSanitizer.formatToMc(relayMessage)));
+        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(chatMessage.isRawMessage() ? chatMessage.getMessage() : ChatSanitizer.formatToMc(chatMessage)));
     }
 
     private boolean initConfig() {

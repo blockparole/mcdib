@@ -1,14 +1,16 @@
 package not.hub.mcdib.util;
 
+import not.hub.mcdib.message.ChatMessage;
+
 public class ChatSanitizer {
 
-    public static String formatToMc(RelayMessage relayMessage) {
-        String out = "<DC:" + filterToMc(relayMessage.sender) + "> " + filterToMc(relayMessage.message);
+    public static String formatToMc(ChatMessage chatMessage) {
+        String out = "<DC:" + filterToMc(chatMessage.getSender()) + "> " + filterToMc(chatMessage.getMessage());
         return out.substring(0, Math.min(out.length(), 256));
     }
 
-    public static String formatToDiscord(RelayMessage relayMessage) {
-        String out = filterToDiscord(relayMessage.sender) + "```" + "\n" + filterToDiscord(relayMessage.message); // System.lineSeparator() causes discord to show 2 linebreaks on mobile
+    public static String formatToDiscord(ChatMessage chatMessage) {
+        String out = filterToDiscord(chatMessage.getSender()) + "```" + "\n" + filterToDiscord(chatMessage.getMessage()); // System.lineSeparator() causes discord to show 2 linebreaks on mobile
         return out.substring(0, Math.min(out.length(), 2000 - 3)) + "```"; // in case someone manages to send 2k char messages
     }
 
@@ -28,6 +30,13 @@ public class ChatSanitizer {
     public static String filterPre(String raw) {
         // TODO: sane regex chat filter
         raw = raw.replaceAll("\\$", " "); // replace linebreaks
+        return raw;
+    }
+
+    // should tellraw actually be filtered?
+    public static String filterTellraw(String raw) {
+        // TODO: sane regex chat filter
+        raw = raw.replaceAll("/", " ");
         return raw;
     }
 

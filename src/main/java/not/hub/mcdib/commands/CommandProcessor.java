@@ -29,7 +29,6 @@ public class CommandProcessor {
     }
 
     public void processCommand(String command, List<String> args) {
-        Log.info("Detected command: " + command + " with arguments: " + args.toString());
         commands.stream().filter(com ->
                 com.getName().toLowerCase().equals(command.toLowerCase())
                         && com.getMinArgs() <= args.size()
