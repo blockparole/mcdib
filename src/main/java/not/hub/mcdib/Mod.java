@@ -15,28 +15,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public final class Mod extends JavaPlugin implements Listener {
 
-    // TODO: Command System
-    // TODO: Use for command auth:
-    // Sets.newHashSet(getConfig().getLongList("discord-admin-user-ids"))
-    // Sets.newHashSet(getConfig().getLongList("discord-admin-role-ids"))
-
-    // TODO: Command: Help Command (List of Commands & Arguments)
-    // TODO: Command: Change Bot presence text & type
-    // TODO: Command: purge chat history (argument: number of messages) or (argument: timestamp start deleterange)
-    // TODO: Command: Enable Bridge Relay (mc, dc, both)
-    // TODO: Command: Disable Bridge Relay (mc, dc, both)
-
-    // TODO: Automatic Slow Mode for bridge channel on spam (possible?)
-    // TODO: Automatic message drop on spam (with prior announcement) (message rate threshold?)
-
-    // TODO: add thread internal queue to be used buffer in case m2dQueue is full
-
     // TODO: write javadoc and replace scattered comments
 
     // m2dQueue & d2mQueue are used for inter thread communication.
-    // they should be used in a way that the discord thread can be blocked
+    // they should be used in a way so the discord thread can be blocked
     // for a maximum of n ms (is there a discord connection timeout?)
     // but the mc thread will never get blocked by reading or writing the queues.
+    // ideally, nothing will ever get blocked. thread blocking can result from: TODO
     // see BlockingQueue javadoc for read/write method explanation.
     // !m2dQueue & d2mQueue are the only gates of communication to use between the threads!
     private static final int QUEUE_CAPACITY = 100;
@@ -53,7 +38,10 @@ public final class Mod extends JavaPlugin implements Listener {
             return;
         }
 
-        // run jda on second thread
+        // starting bot on second thread
+        // everything thats not related to:
+        // delivering and receiving messages from the queues,
+        // delivering discord messages to mc chat and plugin init should run on this thread.
         Thread botThread = new Thread(() -> discordBot = new DiscordBot(m2dQueue, d2mQueue,
                 getConfig().getString("discord-bot-auth-token"),
                 getConfig().getLong("discord-bridge-channel")));
@@ -77,6 +65,7 @@ public final class Mod extends JavaPlugin implements Listener {
 
     }
 
+    // send mc chat to discord
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
         if (!m2dQueue.offer(new Message(event.getPlayer().getName(), event.getMessage()))) {
@@ -84,6 +73,7 @@ public final class Mod extends JavaPlugin implements Listener {
         }
     }
 
+    // This wont fire if the server is not stopped normally (process killed etc.)
     @Override
     public void onDisable() {
         discordBot.shutdown();

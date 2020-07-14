@@ -8,6 +8,12 @@ import java.util.List;
 
 public abstract class Command {
 
+    // TODO: Command: Help Command (List of Commands & Arguments)
+    // TODO: Command: Change Bot presence text & type
+    // TODO: Command: purge chat history (argument: number of messages) or (argument: timestamp start deleterange)
+    // TODO: Command: Enable Bridge Relay (mc, dc, both)
+    // TODO: Command: Disable Bridge Relay (mc, dc, both)
+
     public final String name;
     public final int minArgs;
     public final int maxArgs;

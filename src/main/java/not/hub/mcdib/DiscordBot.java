@@ -19,6 +19,14 @@ import java.util.concurrent.BlockingQueue;
 
 public class DiscordBot extends ListenerAdapter {
 
+    // TODO: Command System
+    // TODO: Use for command auth:
+    // Sets.newHashSet(getConfig().getLongList("discord-admin-user-ids"))
+    // Sets.newHashSet(getConfig().getLongList("discord-admin-role-ids"))
+
+    // TODO: Automatic Slow Mode for bridge channel on spam (possible?)
+    // TODO: Automatic message drop on spam (with prior announcement) (message rate threshold?)
+
     private final BlockingQueue<Message> d2mQueue;
     private final Long bridgeChannelId;
 
