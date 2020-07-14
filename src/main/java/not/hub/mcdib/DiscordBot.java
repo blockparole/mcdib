@@ -9,12 +9,12 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import not.hub.mcdib.commands.CommandProcessor;
 import not.hub.mcdib.util.Log;
 import not.hub.mcdib.util.Message;
 
 import javax.security.auth.login.LoginException;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
 public class DiscordBot extends ListenerAdapter {
@@ -29,13 +29,19 @@ public class DiscordBot extends ListenerAdapter {
 
     private final BlockingQueue<Message> d2mQueue;
     private final Long bridgeChannelId;
+    private final List<Long> adminIds;
+    private final char commandPrefix;
+
+    private CommandProcessor commandProcessor;
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, Long bridgeChannelId) {
+    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
 
         this.d2mQueue = d2mQueue;
         this.bridgeChannelId = bridgeChannelId;
+        this.adminIds = adminIds;
+        this.commandPrefix = commandPrefix;
 
         try {
             jda = JDABuilder
@@ -85,12 +91,14 @@ public class DiscordBot extends ListenerAdapter {
             return;
         }
 
-        TextChannel channel = jda.getTextChannelById(bridgeChannelId);
+        TextChannel bridgeChannel = jda.getTextChannelById(bridgeChannelId);
 
-        if (channel == null) {
+        if (bridgeChannel == null) {
             Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")! halting mcdib initialization...");
             return;
         }
+
+        this.commandProcessor = new CommandProcessor(bridgeChannel);
 
         // TODO: replace timer with observer pattern
         Timer timer = new Timer();
@@ -105,7 +113,7 @@ public class DiscordBot extends ListenerAdapter {
             }
         }, 0, 100);
 
-        Log.info("Initialization finished! Bridge channel is #" + channel.getName() + " on " + channel.getGuild().getName());
+        Log.info("Initialization finished! Bridge channel is #" + bridgeChannel.getName() + " on " + bridgeChannel.getGuild().getName());
 
     }
 
@@ -126,11 +134,31 @@ public class DiscordBot extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+
+        // check for command
+        // check admin permissions by long id
+        if (adminIds.contains(event.getAuthor().getIdLong())) {
+            String raw = event.getMessage().getContentRaw();
+            // message cant be empty, must have prefix as first char and length must be > 1 (including prefix)
+            if (!raw.isEmpty() && raw.charAt(0) == commandPrefix && raw.length() > 1) {
+                List<String> messageElements = Arrays.asList(raw.substring(1).split(" "));
+                if (messageElements.size() == 1) {
+                    commandProcessor.processCommand(messageElements.get(0), Collections.emptyList());
+                    return;
+                } else if (messageElements.size() > 1) {
+                    commandProcessor.processCommand(messageElements.get(0), messageElements.subList(1, messageElements.size()));
+                    return;
+                }
+            }
+        }
+
+        // relay discord chat to mc
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
             if (!d2mQueue.offer(new Message(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
                 Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped...");
             }
         }
+
     }
 
 }

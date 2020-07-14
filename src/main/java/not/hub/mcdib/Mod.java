@@ -42,9 +42,12 @@ public final class Mod extends JavaPlugin implements Listener {
         // everything thats not related to:
         // delivering and receiving messages from the queues,
         // delivering discord messages to mc chat and plugin init should run on this thread.
+        //noinspection ConstantConditions - this is ensured in initConfig()
         Thread botThread = new Thread(() -> discordBot = new DiscordBot(m2dQueue, d2mQueue,
                 getConfig().getString("discord-bot-auth-token"),
-                getConfig().getLong("discord-bridge-channel")));
+                getConfig().getLong("discord-bridge-channel"),
+                getConfig().getLongList("discord-admin-user-ids"),
+                getConfig().getString("discord-command-prefix").charAt(0)));
         botThread.start();
 
         // TODO: replace timer with observer pattern
@@ -65,7 +68,7 @@ public final class Mod extends JavaPlugin implements Listener {
 
     }
 
-    // send mc chat to discord
+    // relay mc chat to discord
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
         if (!m2dQueue.offer(new Message(event.getPlayer().getName(), event.getMessage()))) {
@@ -91,18 +94,19 @@ public final class Mod extends JavaPlugin implements Listener {
 
         final String DEFAULT_TOKEN_VALUE = "AAAAAAAAAAAAAAAAAAAAAAAA.AAAAAA.AAAAAAAAAAAAAAAAAAAAAAAAAAA";
         final Long DEFAULT_ID_VALUE = 111111111111111111L;
+        final String DEFAULT_COMMAND_PREFIX = "-";
 
         getConfig().addDefault("discord-bot-auth-token", DEFAULT_TOKEN_VALUE);
         getConfig().addDefault("discord-bridge-channel", DEFAULT_ID_VALUE);
         getConfig().addDefault("discord-admin-user-ids", Arrays.asList(DEFAULT_ID_VALUE, DEFAULT_ID_VALUE));
-        getConfig().addDefault("discord-admin-role-ids", Arrays.asList(DEFAULT_ID_VALUE, DEFAULT_ID_VALUE));
+        getConfig().addDefault("discord-command-prefix", DEFAULT_COMMAND_PREFIX);
         getConfig().options().copyDefaults(true);
         saveConfig();
 
         // TODO: regex check for token & ids
 
         String token = getConfig().getString("discord-bot-auth-token");
-        if (token == null || token.equals(DEFAULT_TOKEN_VALUE)) {
+        if (token == null || token.isEmpty() || token.equals(DEFAULT_TOKEN_VALUE)) {
             Log.warn("Please supply a bot token! halting mcdib initialization...");
             return false;
         }
@@ -111,6 +115,18 @@ public final class Mod extends JavaPlugin implements Listener {
         if (channel.equals(DEFAULT_ID_VALUE)) {
             Log.warn("Please supply a bridge channel id! halting mcdib initialization...");
             return false;
+        }
+
+        String prefix = getConfig().getString("discord-command-prefix");
+        if (prefix == null || prefix.isEmpty()) {
+            Log.warn("Please supply a command prefix! halting mcdib initialization...");
+            return false;
+        }
+
+        if (prefix.length() > 1) {
+            getConfig().set("discord-command-prefix", prefix.charAt(0));
+            Log.warn("Trimmed prefix to 1 character!");
+            saveConfig();
         }
 
         return true;
