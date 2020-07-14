@@ -11,22 +11,18 @@ public class Message {
     }
 
     public String formatToMc() {
-        String out = format("DC:" + sender, message);
+        String out = "<DC:" + filter(sender) + "> " + filter(message);
         return out.substring(0, Math.min(out.length(), 256));
     }
 
     public String formatToDiscord() {
-        String out = format(sender, message);
-        return out.substring(0, Math.min(out.length(), 2000)); // in case someone manages to send 2k char messages
-    }
-
-    private String format(String sender, String message) {
-        return "<" + filter(sender) + ">" + " " + filter(message);
+        String out = sender + "```" + System.lineSeparator() + filter(message);
+        return out.substring(0, Math.min(out.length(), 2000 - 3)) + "```"; // in case someone manages to send 2k char messages
     }
 
     private String filter(String raw) {
-        // TODO: regex chat filter
-        return raw;
+        // TODO: sane regex chat filter
+        return raw.replaceAll("§", "");
     }
 
 }
