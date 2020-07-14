@@ -86,6 +86,11 @@ public class DiscordBot extends ListenerAdapter {
             e.printStackTrace();
         }
 
+        if (jda.getTextChannelById(bridgeChannelId) == null) {
+            Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")! mcdib shutting down...");
+            return;
+        }
+
         // TODO: replace timer with observer pattern
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -116,7 +121,7 @@ public class DiscordBot extends ListenerAdapter {
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
             Log.info("d2mQueue offer");
             if (!d2mQueue.offer(new Message(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
-                Log.warn("unable to do d2mQueue offer");
+                Log.warn("unable to insert discord message into minecraft send queue, message dropped...");
             }
         }
     }

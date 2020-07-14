@@ -33,8 +33,9 @@ public final class Mod extends JavaPlugin implements Listener {
     // for a maximum of n ms (is there a discord connection timeout?)
     // but the mc thread will never get blocked by reading or writing the queues.
     // see BlockingQueue javadoc for read/write method explanation.
-    private final BlockingQueue<Message> m2dQueue = new LinkedBlockingQueue<>();
-    private final BlockingQueue<Message> d2mQueue = new LinkedBlockingQueue<>();
+    private static final int QUEUE_CAPACITY = 100;
+    private final BlockingQueue<Message> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    private final BlockingQueue<Message> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
 
     private DiscordBot discordBot;
 
@@ -79,7 +80,7 @@ public final class Mod extends JavaPlugin implements Listener {
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
         Log.info("m2dQueue offer");
         if (!m2dQueue.offer(new Message(event.getPlayer().getName(), event.getMessage()))) {
-            Log.warn("unable to do m2dQueue offer");
+            Log.warn("unable to insert minecraft message into discord send queue, message dropped...");
         }
     }
 
