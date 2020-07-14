@@ -1,8 +1,7 @@
-package not.hub.mcdib.commands;
+package not.hub.mcdib;
 
 import net.dv8tion.jda.api.entities.TextChannel;
-import not.hub.mcdib.DiscordBot;
-import not.hub.mcdib.util.Log;
+import not.hub.mcdib.commands.*;
 
 import java.util.HashSet;
 import java.util.List;

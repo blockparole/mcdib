@@ -2,7 +2,6 @@ package not.hub.mcdib;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
@@ -10,10 +9,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import not.hub.mcdib.commands.CommandProcessor;
 import not.hub.mcdib.message.ChatMessage;
 import not.hub.mcdib.util.ChatSanitizer;
 import not.hub.mcdib.util.Log;
+import not.hub.mcdib.util.PresenceGenerator;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
@@ -85,8 +84,7 @@ public class DiscordBot extends ListenerAdapter {
                             // You must use ChunkingFilter.NONE if GUILD_MEMBERS is disabled.
                             // To enable chunking the discord api requires the privileged GUILD_MEMBERS intent.
                             // !Remove the related cache flag when using one of these events in the bot!
-                    ).setActivity(Activity.watching("DC <-> MC"))
-                    .addEventListeners(this)
+                    ).addEventListeners(this)
                     .build();
             jda.awaitReady();
 
@@ -107,6 +105,8 @@ public class DiscordBot extends ListenerAdapter {
         }
 
         this.commandProcessor = new CommandProcessor(bridgeChannel, this);
+
+        PresenceGenerator.updatePresence(jda.getPresence(), d2mEnabled, m2dEnabled);
 
         // TODO: replace timer with observer pattern
         // receive minecraft chat from mc thread
