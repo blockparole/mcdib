@@ -43,7 +43,7 @@ public class CommandPurge extends Command {
         }
 
         channel.deleteMessages(new MessageHistory(channel).retrievePast(amount).complete()).queue();
-        sendToDiscord("purged " + (amount - 1) + " messages");
+        sendToDiscord("purged " + (amount == 100 ? amount : amount - 1) + " messages");
 
     }
 
