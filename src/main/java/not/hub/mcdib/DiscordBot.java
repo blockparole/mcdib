@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import not.hub.mcdib.commands.CommandProcessor;
+import not.hub.mcdib.util.ChatSanitizer;
 import not.hub.mcdib.util.Log;
 import not.hub.mcdib.util.Message;
 
@@ -98,7 +99,7 @@ public class DiscordBot extends ListenerAdapter {
             return;
         }
 
-        this.commandProcessor = new CommandProcessor(bridgeChannel);
+        this.commandProcessor = new CommandProcessor(bridgeChannel, this);
 
         // TODO: replace timer with observer pattern
         Timer timer = new Timer();
@@ -117,13 +118,13 @@ public class DiscordBot extends ListenerAdapter {
 
     }
 
-    private void sendMessageToDiscord(Message message) {
+    public void sendMessageToDiscord(Message message) {
         TextChannel channel = jda.getTextChannelById(bridgeChannelId);
         if (channel == null) {
             Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")!");
             return;
         }
-        channel.sendMessage(message.formatToDiscord()).queue();
+        channel.sendMessage(ChatSanitizer.formatToDiscord(message)).queue();
     }
 
     // This wont fire if the server is not stopped normally (process killed etc.)
@@ -159,6 +160,14 @@ public class DiscordBot extends ListenerAdapter {
             }
         }
 
+    }
+
+    public JDA getJda() {
+        return jda;
+    }
+
+    public CommandProcessor getCommandProcessor() {
+        return commandProcessor;
     }
 
 }

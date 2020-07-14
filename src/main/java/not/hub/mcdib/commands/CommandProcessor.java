@@ -1,6 +1,7 @@
 package not.hub.mcdib.commands;
 
 import net.dv8tion.jda.api.entities.TextChannel;
+import not.hub.mcdib.DiscordBot;
 import not.hub.mcdib.util.Log;
 
 import java.util.HashSet;
@@ -9,20 +10,18 @@ import java.util.Set;
 
 public class CommandProcessor {
 
-    private final TextChannel channel;
     private final Set<Command> commands;
 
-    public CommandProcessor(TextChannel channel) {
-        this.channel = channel;
+    public CommandProcessor(TextChannel channel, DiscordBot discordBot) {
         commands = new HashSet<>();
-        loadCommands();
+        loadCommands(channel, discordBot);
     }
 
-    private void loadCommands() {
-        commands.add(new CommandHelp(channel));
-        commands.add(new CommandPresence(channel));
-        commands.add(new CommandPurge(channel));
-        commands.add(new CommandRelay(channel));
+    private void loadCommands(TextChannel channel, DiscordBot discordBot) {
+        commands.add(new CommandHelp(channel, discordBot));
+        commands.add(new CommandPresence(channel, discordBot));
+        commands.add(new CommandPurge(channel, discordBot));
+        commands.add(new CommandRelay(channel, discordBot));
     }
 
     public void processCommand(String command, List<String> args) {
@@ -32,6 +31,10 @@ public class CommandProcessor {
                         && com.minArgs <= args.size()
                         && com.maxArgs >= args.size()
         ).findFirst().ifPresent(com -> com.run(args));
+    }
+
+    public Set<Command> getCommands() {
+        return commands;
     }
 
 }

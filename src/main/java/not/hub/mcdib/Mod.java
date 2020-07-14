@@ -1,5 +1,6 @@
 package not.hub.mcdib;
 
+import not.hub.mcdib.util.ChatSanitizer;
 import not.hub.mcdib.util.Log;
 import not.hub.mcdib.util.Message;
 import org.bukkit.event.EventHandler;
@@ -85,7 +86,7 @@ public final class Mod extends JavaPlugin implements Listener {
 
     private void sendMessageToMinecraft(Message message) {
         // TODO: use broadcast instead of players foreach? (does this spam console?)
-        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(message.formatToMc()));
+        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(ChatSanitizer.formatToMc(message)));
     }
 
     private boolean initConfig() {
