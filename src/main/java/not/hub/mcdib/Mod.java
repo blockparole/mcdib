@@ -85,8 +85,10 @@ public final class Mod extends JavaPlugin implements Listener {
     }
 
     private void sendMessageToMinecraft(ChatMessage chatMessage) {
+        String message = (chatMessage.isRawMessage() ? chatMessage.getMessage() : ChatSanitizer.formatToMc(chatMessage));
+        Log.info("Sending Message to MC: " + message);
         // TODO: use broadcast instead of players foreach? (does this spam console?)
-        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(chatMessage.isRawMessage() ? chatMessage.getMessage() : ChatSanitizer.formatToMc(chatMessage)));
+        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(message));
     }
 
     private boolean initConfig() {

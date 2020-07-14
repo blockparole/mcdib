@@ -11,9 +11,9 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import not.hub.mcdib.commands.CommandProcessor;
+import not.hub.mcdib.message.ChatMessage;
 import not.hub.mcdib.util.ChatSanitizer;
 import not.hub.mcdib.util.Log;
-import not.hub.mcdib.message.ChatMessage;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
@@ -156,7 +156,9 @@ public class DiscordBot extends ListenerAdapter {
 
         // relay discord chat to mc
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
-            if (!d2mQueue.offer(new ChatMessage(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
+            String message = event.getMessage().getContentRaw();
+            if (ChatSanitizer.filterToMc(message).isEmpty()) return;
+            if (!d2mQueue.offer(new ChatMessage(event.getAuthor().getName(), message))) {
                 Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped...");
             }
         }
