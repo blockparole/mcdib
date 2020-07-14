@@ -1,10 +1,10 @@
 package not.hub.mcdib.commands;
 
-import com.google.common.collect.Lists;
 import not.hub.mcdib.DiscordBot;
+import not.hub.mcdib.enums.Relay;
+import not.hub.mcdib.enums.State;
 import not.hub.mcdib.utils.PresenceGenerator;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -27,11 +27,11 @@ public class CommandRelay extends Command {
             return;
         }
 
-        boolean state;
+        State state;
         if (State.ON.getValues().contains(stateInput)) {
-            state = true;
+            state = State.ON;
         } else if (State.OFF.getValues().contains(stateInput)) {
-            state = false;
+            state = State.OFF;
         } else {
             sendToDiscord(failMessage);
             return;
@@ -56,14 +56,14 @@ public class CommandRelay extends Command {
 
         if (relay.equals(Relay.DISCORD)) {
             sendToDiscord("Relay Discord -> Minecraft status: " + state);
-            getBot().setD2mEnabled(state);
+            getBot().setD2mEnabled(state.getState());
         } else if (relay.equals(Relay.MINECRAFT)) {
             sendToDiscord("Relay Discord <- Minecraft status: " + state);
-            getBot().setM2dEnabled(state);
+            getBot().setM2dEnabled(state.getState());
         } else {
             sendToDiscord("Relay Discord -> Minecraft status: " + state + "\n" + "Relay Discord <- Minecraft status: " + state);
-            getBot().setD2mEnabled(state);
-            getBot().setM2dEnabled(state);
+            getBot().setD2mEnabled(state.getState());
+            getBot().setM2dEnabled(state.getState());
         }
 
         PresenceGenerator.updatePresence(getBot());
@@ -82,41 +82,6 @@ public class CommandRelay extends Command {
                 sb.append(relay.toString()).append(": ").append(String.join(", ", relay.getValues())).append("\n");
         });
         return sb.toString();
-    }
-
-    public enum Relay {
-
-        MINECRAFT(Lists.newArrayList("m", "mc", "mine", "minecraft")),
-        DISCORD(Lists.newArrayList("d", "dc", "disc", "discord")),
-        BOTH(Collections.emptyList());
-
-        private final List<String> values;
-
-        Relay(final List<String> values) {
-            this.values = values;
-        }
-
-        public List<String> getValues() {
-            return values;
-        }
-
-    }
-
-    public enum State {
-
-        ON(Lists.newArrayList("on", "yes", "1", "true")),
-        OFF(Lists.newArrayList("off", "no", "0", "false"));
-
-        private final List<String> values;
-
-        State(final List<String> values) {
-            this.values = values;
-        }
-
-        public List<String> getValues() {
-            return values;
-        }
-
     }
 
 }
