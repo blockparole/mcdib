@@ -1,6 +1,8 @@
 package not.hub.mcdib;
 
 import com.google.common.collect.Sets;
+import not.hub.mcdib.util.Log;
+import not.hub.mcdib.util.Message;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;

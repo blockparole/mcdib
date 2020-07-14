@@ -1,4 +1,4 @@
-package not.hub.mcdib;
+package not.hub.mcdib.util;
 
 public class Message {
 
