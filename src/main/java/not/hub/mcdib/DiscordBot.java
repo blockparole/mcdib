@@ -9,11 +9,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import not.hub.mcdib.message.ChatMessage;
-import not.hub.mcdib.util.ChatSanitizer;
-import not.hub.mcdib.util.FloodCounter;
-import not.hub.mcdib.util.Log;
-import not.hub.mcdib.util.PresenceGenerator;
+import not.hub.mcdib.messages.ChatMessage;
+import not.hub.mcdib.utils.ChatSanitizer;
+import not.hub.mcdib.utils.Log;
+import not.hub.mcdib.utils.PresenceGenerator;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
@@ -37,7 +36,7 @@ public class DiscordBot extends ListenerAdapter {
     private Boolean m2dEnabled;
     private Boolean d2mEnabled;
 
-    private FloodCounter floodCounter;
+    private AntiFlood antiFlood;
 
     private CommandProcessor commandProcessor;
 
@@ -107,10 +106,10 @@ public class DiscordBot extends ListenerAdapter {
             return;
         }
 
-        floodCounter = new FloodCounter(false);
+        antiFlood = new AntiFlood(true, this);
         commandProcessor = new CommandProcessor(bridgeChannel, this);
 
-        PresenceGenerator.updatePresence(jda.getPresence(), d2mEnabled, m2dEnabled);
+        PresenceGenerator.updatePresence(this);
 
         // TODO: replace timer with observer pattern
         // receive minecraft chat from mc thread
@@ -121,9 +120,9 @@ public class DiscordBot extends ListenerAdapter {
                 if (m2dQueue.peek() == null) {
                     return;
                 }
-                floodCounter.icrementM2dCounter();
+                antiFlood.icrementM2dCounter();
                 ChatMessage chatMessage = m2dQueue.poll();
-                if (m2dEnabled && !floodCounter.isM2dFlood()) {
+                if (m2dEnabled && !antiFlood.isM2dFlood()) {
                     sendMessageToDiscord(chatMessage);
                 }
             }
@@ -178,8 +177,8 @@ public class DiscordBot extends ListenerAdapter {
         }
 
         // relay discord chat to mc
-        floodCounter.icrementD2mCounter();
-        if (d2mEnabled && !floodCounter.isD2mFlood()) {
+        antiFlood.icrementD2mCounter();
+        if (d2mEnabled && !antiFlood.isD2mFlood()) {
             String message = event.getMessage().getContentRaw();
             if (ChatSanitizer.filterToMc(message).isEmpty()) return;
             if (!d2mQueue.offer(new ChatMessage(event.getAuthor().getName(), message))) {
@@ -198,8 +197,8 @@ public class DiscordBot extends ListenerAdapter {
         return jda;
     }
 
-    public FloodCounter getFloodCounter() {
-        return floodCounter;
+    public AntiFlood getAntiFlood() {
+        return antiFlood;
     }
 
     public CommandProcessor getCommandProcessor() {

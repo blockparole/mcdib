@@ -13,7 +13,7 @@ public class CommandProcessor {
 
     public CommandProcessor(TextChannel channel, DiscordBot discordBot) {
         commands = new HashSet<>();
-        // TODO: remove circular dependency commands have for discordBot
+        // TODO: remove circular dependency commands have for discordBot (interface with bot field?)
         loadCommands(discordBot);
     }
 

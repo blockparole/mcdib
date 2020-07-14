@@ -3,7 +3,7 @@ package not.hub.mcdib.commands;
 import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.TextChannel;
 import not.hub.mcdib.DiscordBot;
-import not.hub.mcdib.util.Log;
+import not.hub.mcdib.utils.Log;
 
 import java.util.List;
 

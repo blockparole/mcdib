@@ -1,8 +1,8 @@
 package not.hub.mcdib;
 
-import not.hub.mcdib.message.ChatMessage;
-import not.hub.mcdib.util.ChatSanitizer;
-import not.hub.mcdib.util.Log;
+import not.hub.mcdib.messages.ChatMessage;
+import not.hub.mcdib.utils.ChatSanitizer;
+import not.hub.mcdib.utils.Log;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;

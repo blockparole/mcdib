@@ -1,4 +1,4 @@
-package not.hub.mcdib.util;
+package not.hub.mcdib.utils;
 
 public class Snowflake {
 

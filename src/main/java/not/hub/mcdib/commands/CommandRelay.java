@@ -2,7 +2,7 @@ package not.hub.mcdib.commands;
 
 import com.google.common.collect.Lists;
 import not.hub.mcdib.DiscordBot;
-import not.hub.mcdib.util.PresenceGenerator;
+import not.hub.mcdib.utils.PresenceGenerator;
 
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +66,7 @@ public class CommandRelay extends Command {
             getBot().setM2dEnabled(state);
         }
 
-        PresenceGenerator.updatePresence(getBot().getJda().getPresence(), getBot().getD2mEnabled(), getBot().getM2dEnabled());
+        PresenceGenerator.updatePresence(getBot());
 
     }
 

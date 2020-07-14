@@ -1,8 +1,8 @@
-package not.hub.mcdib.util;
+package not.hub.mcdib.utils;
 
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.managers.Presence;
+import not.hub.mcdib.DiscordBot;
 
 import java.util.AbstractMap;
 
@@ -16,9 +16,11 @@ public class PresenceGenerator {
         }
     }
 
-    public static void updatePresence(Presence sessionPresence, boolean d2m, boolean m2d) {
-        AbstractMap.SimpleEntry<OnlineStatus, Activity> presence = generateActivity(d2m, m2d);
-        sessionPresence.setPresence(presence.getKey(), presence.getValue());
+    public static void updatePresence(DiscordBot bot) {
+        AbstractMap.SimpleEntry<OnlineStatus, Activity> presence = generateActivity(
+                bot.getD2mEnabled() && !(bot.getAntiFlood().isD2mFlood() && bot.getAntiFlood().isActive()),
+                bot.getM2dEnabled() && !(bot.getAntiFlood().isM2dFlood() && bot.getAntiFlood().isActive()));
+        bot.getJda().getPresence().setPresence(presence.getKey(), presence.getValue());
     }
 
 }

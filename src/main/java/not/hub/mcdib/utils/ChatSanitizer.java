@@ -1,6 +1,6 @@
-package not.hub.mcdib.util;
+package not.hub.mcdib.utils;
 
-import not.hub.mcdib.message.ChatMessage;
+import not.hub.mcdib.messages.ChatMessage;
 
 public class ChatSanitizer {
 

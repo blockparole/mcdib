@@ -1,8 +1,8 @@
 package not.hub.mcdib.commands;
 
 import not.hub.mcdib.DiscordBot;
-import not.hub.mcdib.message.ChatMessage;
-import not.hub.mcdib.util.Log;
+import not.hub.mcdib.messages.ChatMessage;
+import not.hub.mcdib.utils.Log;
 
 import java.util.List;
 
