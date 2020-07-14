@@ -17,6 +17,8 @@ import java.util.concurrent.BlockingQueue;
 
 public class DiscordBot extends ListenerAdapter {
 
+    // TODO: add thread internal queue to be used buffer in case d2mQueue is full
+
     // m2dQueue & d2mQueue are used for inter thread communication.
     // they should be used in a way that the discord thread can be blocked
     // for a maximum of n ms (is there a discord connection timeout?)
@@ -112,8 +114,9 @@ public class DiscordBot extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
+            Log.info("d2mQueue offer");
             if (!d2mQueue.offer(new Message(event.getAuthor().getName(), event.getMessage().getContentRaw()))) {
-                // TODO: warn in console
+                Log.warn("unable to do d2mQueue offer");
             }
         }
     }

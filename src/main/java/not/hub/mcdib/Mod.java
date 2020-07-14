@@ -14,6 +14,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public final class Mod extends JavaPlugin implements Listener {
 
+    // TODO: Command System
+    // TODO: Command: Help Command (List of Commands & Arguments)
+    // TODO: Command: Change Bot presence text & type
+    // TODO: Command: purge chat history (argument: number of messages) or (argument: timestamp start deleterange)
+    // TODO: Command: Enable Bridge Relay (mc, dc, both)
+    // TODO: Command: Disable Bridge Relay (mc, dc, both)
+
+    // TODO: Automatic Slow Mode for bridge channel on spam (possible?)
+    // TODO: Automatic message drop on spam (with prior announcement) (message rate threshold?)
+
+    // TODO: add thread internal queue to be used buffer in case m2dQueue is full
+
+    // TODO: write javadoc
+
     // m2dQueue & d2mQueue are used for inter thread communication.
     // they should be used in a way that the discord thread can be blocked
     // for a maximum of n ms (is there a discord connection timeout?)
@@ -51,7 +65,7 @@ public final class Mod extends JavaPlugin implements Listener {
                     return;
                 }
                 Message message = d2mQueue.poll();
-                // TODO: use broadcast instead of players foreach?
+                // TODO: use broadcast instead of players foreach? (does this spam console?)
                 getServer().getOnlinePlayers().forEach(player -> player.sendMessage(message.formatToMc()));
             }
         }, 0, 100);
@@ -59,21 +73,13 @@ public final class Mod extends JavaPlugin implements Listener {
         // register mc chat listener
         getServer().getPluginManager().registerEvents(this, this);
 
-        // TODO: pipe mc chat to bot thread by filling m2dqueue via chat listener
-        // this returns false if the element was not added (queue was full probably):
-        // m2dQueue.offer("testfrommc");
-
-        // TODO: periodically (1000ms?) pipe discord chat from bot thread into mc chat via d2mqueue
-        // this returns null if the queue was empty:
-        // String testfromdiscord = d2mQueue.poll();
-
     }
 
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
-        getLogger().info("m2dQueue offer");
+        Log.info("m2dQueue offer");
         if (!m2dQueue.offer(new Message(event.getPlayer().getName(), event.getMessage()))) {
-            // TODO: warn in console
+            Log.warn("unable to do m2dQueue offer");
         }
     }
 
@@ -94,17 +100,17 @@ public final class Mod extends JavaPlugin implements Listener {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
-        // TODO: token regex check for token & ids
+        // TODO: regex check for token & ids
 
         String token = getConfig().getString("discord-bot-auth-token");
         if (token == null || token.equals(DEFAULT_TOKEN_VALUE)) {
-            getLogger().warning("Please supply a bot token! mcdib shutting down...");
+            Log.warn("Please supply a bot token! mcdib shutting down...");
             return false;
         }
 
         Long channel = getConfig().getLong("discord-bridge-channel");
         if (channel.equals(DEFAULT_ID_VALUE)) {
-            getLogger().warning("Please supply a bridge channel id! mcdib shutting down...");
+            Log.warn("Please supply a bridge channel id! mcdib shutting down...");
             return false;
         }
 
