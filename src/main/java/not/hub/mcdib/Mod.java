@@ -74,7 +74,7 @@ public final class Mod extends JavaPlugin implements Listener {
     @EventHandler
     public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
         if (!m2dQueue.offer(new ChatMessage(event.getPlayer().getName(), event.getMessage()))) {
-            Log.warn("Unable to insert Minecraft message into Discord send queue, message dropped...");
+            Log.warn("Unable to insert Minecraft message into Discord send queue, message dropped... Something seems wrong, check your logs!");
         }
     }
 

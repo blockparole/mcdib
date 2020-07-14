@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import not.hub.mcdib.message.ChatMessage;
 import not.hub.mcdib.util.ChatSanitizer;
+import not.hub.mcdib.util.FloodCounter;
 import not.hub.mcdib.util.Log;
 import not.hub.mcdib.util.PresenceGenerator;
 
@@ -35,6 +36,8 @@ public class DiscordBot extends ListenerAdapter {
 
     private Boolean m2dEnabled;
     private Boolean d2mEnabled;
+
+    private FloodCounter floodCounter;
 
     private CommandProcessor commandProcessor;
 
@@ -104,7 +107,8 @@ public class DiscordBot extends ListenerAdapter {
             return;
         }
 
-        this.commandProcessor = new CommandProcessor(bridgeChannel, this);
+        floodCounter = new FloodCounter(false);
+        commandProcessor = new CommandProcessor(bridgeChannel, this);
 
         PresenceGenerator.updatePresence(jda.getPresence(), d2mEnabled, m2dEnabled);
 
@@ -117,8 +121,9 @@ public class DiscordBot extends ListenerAdapter {
                 if (m2dQueue.peek() == null) {
                     return;
                 }
+                floodCounter.icrementM2dCounter();
                 ChatMessage chatMessage = m2dQueue.poll();
-                if (m2dEnabled) {
+                if (m2dEnabled && !floodCounter.isM2dFlood()) {
                     sendMessageToDiscord(chatMessage);
                 }
             }
@@ -146,6 +151,15 @@ public class DiscordBot extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
 
+        // we dont want this kind of messages
+        if (
+                event.getChannel().getIdLong() != bridgeChannelId
+                        || event.getAuthor().isBot()
+                        || !event.getMessage().isFromType(ChannelType.TEXT)
+        ) {
+            return;
+        }
+
         // check for command
         // check admin permissions by long id
         if (adminIds.contains(event.getAuthor().getIdLong())) {
@@ -164,11 +178,12 @@ public class DiscordBot extends ListenerAdapter {
         }
 
         // relay discord chat to mc
-        if (d2mEnabled && event.getChannel().getIdLong() == bridgeChannelId && !event.getAuthor().isBot() && event.getMessage().isFromType(ChannelType.TEXT)) {
+        floodCounter.icrementD2mCounter();
+        if (d2mEnabled && !floodCounter.isD2mFlood()) {
             String message = event.getMessage().getContentRaw();
             if (ChatSanitizer.filterToMc(message).isEmpty()) return;
             if (!d2mQueue.offer(new ChatMessage(event.getAuthor().getName(), message))) {
-                Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped...");
+                Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped... Something seems wrong, check your logs!");
             }
         }
 
@@ -181,6 +196,10 @@ public class DiscordBot extends ListenerAdapter {
 
     public JDA getJda() {
         return jda;
+    }
+
+    public FloodCounter getFloodCounter() {
+        return floodCounter;
     }
 
     public CommandProcessor getCommandProcessor() {
