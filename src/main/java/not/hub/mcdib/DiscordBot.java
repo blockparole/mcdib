@@ -141,6 +141,12 @@ public class DiscordBot extends ListenerAdapter {
         channel.sendMessage(ChatSanitizer.formatToDiscord(chatMessage)).queue();
     }
 
+    public void sendMessageToMinecraft(ChatMessage message) {
+        if (!d2mQueue.offer(message)) {
+            Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped... Something seems wrong, check your logs!");
+        }
+    }
+
     // This wont fire if the server is not stopped normally (process killed etc.)
     public void shutdown() {
         Log.info("Shutting down JDA");
@@ -181,9 +187,7 @@ public class DiscordBot extends ListenerAdapter {
         if (d2mEnabled && !antiFlood.isD2mFlood()) {
             String message = event.getMessage().getContentRaw();
             if (ChatSanitizer.filterToMc(message).isEmpty()) return;
-            if (!d2mQueue.offer(new ChatMessage(event.getAuthor().getName(), message))) {
-                Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped... Something seems wrong, check your logs!");
-            }
+            sendMessageToMinecraft(new ChatMessage(event.getAuthor().getName(), message));
         }
 
     }

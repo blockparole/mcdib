@@ -1,7 +1,6 @@
 package not.hub.mcdib;
 
 import not.hub.mcdib.messages.ChatMessage;
-import not.hub.mcdib.utils.Log;
 import not.hub.mcdib.utils.PresenceGenerator;
 
 import java.util.Arrays;
@@ -64,9 +63,7 @@ public class AntiFlood {
                 boolean d2mFloodOld = d2mFlood;
                 d2mFlood = d2mMinuteAverage > d2mMinuteAverageLimit;
                 if (d2mFlood != d2mFloodOld && active) {
-                    String message = "Antiflood discord to minecraft message drop is now " + (d2mFlood ? "enabled!" : "disabled again");
-                    Log.info(message);
-                    bot.sendMessageToDiscord(new ChatMessage(message));
+                    bot.sendMessageToDiscord(new ChatMessage("Antiflood discord to minecraft message drop is now " + (d2mFlood ? "enabled!" : "disabled again")));
                     PresenceGenerator.updatePresence(bot);
                 }
 
@@ -74,9 +71,7 @@ public class AntiFlood {
                 boolean m2dFloodOld = m2dFlood;
                 m2dFlood = m2dMinuteAverage > m2dMinuteAverageLimit;
                 if (m2dFlood != m2dFloodOld && active) {
-                    String message = "Antiflood minecraft to discord message drop is now " + (m2dFlood ? "enabled!" : "disabled again");
-                    Log.info(message);
-                    bot.sendMessageToDiscord(new ChatMessage(message));
+                    bot.sendMessageToDiscord(new ChatMessage("Antiflood minecraft to discord message drop is now " + (m2dFlood ? "enabled!" : "disabled again")));
                     PresenceGenerator.updatePresence(bot);
                 }
 

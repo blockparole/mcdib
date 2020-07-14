@@ -78,8 +78,9 @@ public class CommandRelay extends Command {
         Stream.of(State.values()).forEach(state ->
                 sb.append(state.toString()).append(": ").append(String.join(", ", state.getValues())).append("\n"));
         Stream.of(Relay.values()).forEach(relay -> {
-            if (!relay.equals(Relay.BOTH))
+            if (!relay.equals(Relay.BOTH)) {
                 sb.append(relay.toString()).append(": ").append(String.join(", ", relay.getValues())).append("\n");
+            }
         });
         return sb.toString();
     }
