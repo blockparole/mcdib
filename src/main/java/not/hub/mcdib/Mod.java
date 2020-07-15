@@ -1,5 +1,6 @@
 package not.hub.mcdib;
 
+import not.hub.mcdib.enums.State;
 import not.hub.mcdib.messages.ChatMessage;
 import not.hub.mcdib.messages.ConfigMessage;
 import not.hub.mcdib.messages.Message;
@@ -115,11 +116,23 @@ public final class Mod extends JavaPlugin implements Listener {
         final String DEFAULT_TOKEN_VALUE = "AAAAAAAAAAAAAAAAAAAAAAAA.AAAAAA.AAAAAAAAAAAAAAAAAAAAAAAAAAA";
         final Long DEFAULT_ID_VALUE = 111111111111111111L;
         final String DEFAULT_COMMAND_PREFIX = "-";
+        final String DEFAULT_RELAY_D2M_STATE = "enabled";
+        final String DEFAULT_RELAY_M2D_STATE = "enabled";
+        final String DEFAULT_ANTIFLOOD_D2M_STATE = "enabled";
+        final String DEFAULT_ANTIFLOOD_M2D_STATE = "enabled";
+        final Integer DEFAULT_ANTIFLOOD_D2M_LIMIT = 15;
+        final Integer DEFAULT_ANTIFLOOD_M2D_LIMIT = 30;
 
         getConfig().addDefault("discord-bot-auth-token", DEFAULT_TOKEN_VALUE);
         getConfig().addDefault("discord-bridge-channel", DEFAULT_ID_VALUE);
         getConfig().addDefault("discord-admin-user-ids", Arrays.asList(DEFAULT_ID_VALUE, DEFAULT_ID_VALUE));
         getConfig().addDefault("discord-command-prefix", DEFAULT_COMMAND_PREFIX);
+        getConfig().addDefault("relay-d2m", DEFAULT_RELAY_D2M_STATE);
+        getConfig().addDefault("relay-m2d", DEFAULT_RELAY_M2D_STATE);
+        getConfig().addDefault("antiflood-d2m", DEFAULT_ANTIFLOOD_D2M_STATE);
+        getConfig().addDefault("antiflood-m2d", DEFAULT_ANTIFLOOD_M2D_STATE);
+        getConfig().addDefault("antiflood-d2m-limit", DEFAULT_ANTIFLOOD_D2M_LIMIT);
+        getConfig().addDefault("antiflood-m2d-limit", DEFAULT_ANTIFLOOD_M2D_LIMIT);
         getConfig().options().copyDefaults(true);
         saveConfig();
 
@@ -154,10 +167,15 @@ public final class Mod extends JavaPlugin implements Listener {
     }
 
     private void parseConfig(ConfigMessage message) {
+        // TODO: Implement a type system for this mess so there is no parsing needed!
         try {
             getConfig().set(message.getKey(), Long.parseLong(message.getMessage()));
         } catch (NumberFormatException e) {
-            getConfig().set(message.getKey(), message.getMessage());
+            if (State.ON.getValues().contains(message.getMessage()) || State.OFF.getValues().contains(message.getMessage())) {
+                getConfig().set(message.getKey(), Boolean.parseBoolean(message.getMessage()));
+            } else {
+                getConfig().set(message.getKey(), message.getMessage());
+            }
         }
         saveConfig();
     }

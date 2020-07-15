@@ -4,6 +4,7 @@ import not.hub.mcdib.AntiFlood;
 import not.hub.mcdib.DiscordBot;
 import not.hub.mcdib.enums.Relay;
 import not.hub.mcdib.enums.State;
+import not.hub.mcdib.messages.ConfigMessage;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -69,22 +70,33 @@ public class CommandFlood extends Command {
             return;
         }
 
+        /*
+                getConfig().addDefault("", DEFAULT_ANTIFLOOD_D2M_STATE);
+        getConfig().addDefault("", DEFAULT_ANTIFLOOD_M2D_STATE);
+        getConfig().addDefault("", DEFAULT_ANTIFLOOD_D2M_LIMIT);
+        getConfig().addDefault("", DEFAULT_ANTIFLOOD_M2D_LIMIT);
+         */
+
         if (!isNoNumber) {
             // number value
             if (relay.equals(Relay.DISCORD)) {
                 getBot().getAntiFlood().setD2mMinuteAverageLimit(messagesPerSecond);
+                getBot().sendConfigMessage(new ConfigMessage("antiflood-d2m-limit", String.valueOf(messagesPerSecond)));
                 sendInfoToDiscord("Discord to Minecraft Antiflood limit is now: " + messagesPerSecond + " messages per second");
             } else {
                 getBot().getAntiFlood().setM2dMinuteAverageLimit(messagesPerSecond);
+                getBot().sendConfigMessage(new ConfigMessage("antiflood-m2d-limit", String.valueOf(messagesPerSecond)));
                 sendInfoToDiscord("Minecraft to Discord Antiflood limit is now: " + messagesPerSecond + " messages per second");
             }
         } else {
             // boolean value
             if (relay.equals(Relay.DISCORD)) {
                 getBot().getAntiFlood().setD2mAntifloodActive(state.getState());
+                getBot().sendConfigMessage(new ConfigMessage("antiflood-d2m", state.getValueString()));
                 sendInfoToDiscord("Discord to Minecraft Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
             } else {
                 getBot().getAntiFlood().setM2dAntifloodActive(state.getState());
+                getBot().sendConfigMessage(new ConfigMessage("antiflood-m2d", state.getValueString()));
                 sendInfoToDiscord("Minecraft to Discord Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
             }
         }

@@ -3,6 +3,7 @@ package not.hub.mcdib.commands;
 import not.hub.mcdib.DiscordBot;
 import not.hub.mcdib.enums.Relay;
 import not.hub.mcdib.enums.State;
+import not.hub.mcdib.messages.ConfigMessage;
 import not.hub.mcdib.utils.PresenceGenerator;
 
 import java.util.List;
@@ -56,12 +57,16 @@ public class CommandRelay extends Command {
 
         if (relay.equals(Relay.DISCORD)) {
             sendInfoToDiscord("Relay Discord -> Minecraft status: " + state);
+            getBot().sendConfigMessage(new ConfigMessage("relay-d2m", state.getValueString()));
             getBot().setD2mEnabled(state.getState());
         } else if (relay.equals(Relay.MINECRAFT)) {
             sendInfoToDiscord("Relay Discord <- Minecraft status: " + state);
+            getBot().sendConfigMessage(new ConfigMessage("relay-m2d", state.getValueString()));
             getBot().setM2dEnabled(state.getState());
         } else {
             sendInfoToDiscord("Relay Discord -> Minecraft status: " + state + "\n" + "Relay Discord <- Minecraft status: " + state);
+            getBot().sendConfigMessage(new ConfigMessage("relay-d2m", state.getValueString()));
+            getBot().sendConfigMessage(new ConfigMessage("relay-m2d", state.getValueString()));
             getBot().setD2mEnabled(state.getState());
             getBot().setM2dEnabled(state.getState());
         }
