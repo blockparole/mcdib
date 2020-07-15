@@ -1,6 +1,9 @@
 package not.hub.mcdib;
 
 import not.hub.mcdib.messages.ChatMessage;
+import not.hub.mcdib.messages.ConfigMessage;
+import not.hub.mcdib.messages.Message;
+import not.hub.mcdib.messages.RawMessage;
 import not.hub.mcdib.utils.ChatSanitizer;
 import not.hub.mcdib.utils.Log;
 import org.bukkit.event.EventHandler;
@@ -26,8 +29,8 @@ public final class Mod extends JavaPlugin implements Listener {
     // see BlockingQueue javadoc for read/write method explanation.
     // !m2dQueue & d2mQueue are the only gates of communication to use between the threads!
     private static final int QUEUE_CAPACITY = 100;
-    private final BlockingQueue<ChatMessage> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
-    private final BlockingQueue<ChatMessage> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    private final BlockingQueue<Message> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    private final BlockingQueue<Message> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
 
     private DiscordBot discordBot;
 
@@ -60,8 +63,14 @@ public final class Mod extends JavaPlugin implements Listener {
                 if (d2mQueue.peek() == null) {
                     return;
                 }
-                ChatMessage chatMessage = d2mQueue.poll();
-                sendMessageToMinecraft(chatMessage);
+                Message message = d2mQueue.poll();
+                if (message instanceof ChatMessage) {
+                    sendMessageToMinecraft((ChatMessage) message);
+                } else if (message instanceof RawMessage) {
+                    sendMessageToMinecraft((RawMessage) message);
+                } else if (message instanceof ConfigMessage) {
+                    parseConfig((ConfigMessage) message);
+                }
             }
         }, 0, 100);
 
@@ -87,7 +96,12 @@ public final class Mod extends JavaPlugin implements Listener {
 
     private void sendMessageToMinecraft(ChatMessage chatMessage) {
         // TODO: use broadcast instead of players foreach? (does this spam console?)
-        getServer().getOnlinePlayers().forEach(player -> player.sendMessage((chatMessage.isRawMessage() ? chatMessage.getMessage() : ChatSanitizer.formatToMc(chatMessage))));
+        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(ChatSanitizer.formatToMc(chatMessage)));
+    }
+
+    private void sendMessageToMinecraft(RawMessage rawMessage) {
+        // TODO: use broadcast instead of players foreach? (does this spam console?)
+        getServer().getOnlinePlayers().forEach(player -> player.sendMessage(rawMessage.getMessage()));
     }
 
     private boolean initConfig() {
@@ -132,6 +146,10 @@ public final class Mod extends JavaPlugin implements Listener {
         }
 
         return true;
+
+    }
+
+    private void parseConfig(ConfigMessage message) {
 
     }
 

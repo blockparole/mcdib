@@ -14,7 +14,7 @@ public class CommandHelp extends Command {
     @Override
     public void run(List<String> args) {
         if (args.size() == 0) {
-            sendToDiscord("Commands: " + getBot().getCommandProcessor().getCommands().stream().map(Command::getName).collect(Collectors.joining(", ")));
+            sendInfoToDiscord("Commands: " + getBot().getCommandProcessor().getCommands().stream().map(Command::getName).collect(Collectors.joining(", ")));
         } else {
             StringBuilder sb = new StringBuilder();
             getBot().getCommandProcessor().getCommands().stream().filter(command -> command.getName().toLowerCase().equals(args.get(0).toLowerCase())).findFirst().ifPresent(command -> {
@@ -30,7 +30,7 @@ public class CommandHelp extends Command {
                         .append("Description: ")
                         .append(command.getDescription());
             });
-            sendToDiscord(sb.toString());
+            sendInfoToDiscord(sb.toString());
         }
     }
 

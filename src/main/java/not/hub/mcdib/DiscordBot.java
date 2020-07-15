@@ -10,6 +10,9 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import not.hub.mcdib.messages.ChatMessage;
+import not.hub.mcdib.messages.ConfigMessage;
+import not.hub.mcdib.messages.Message;
+import not.hub.mcdib.messages.RawMessage;
 import not.hub.mcdib.utils.ChatSanitizer;
 import not.hub.mcdib.utils.Log;
 import not.hub.mcdib.utils.PresenceGenerator;
@@ -28,7 +31,7 @@ public class DiscordBot extends ListenerAdapter {
     // TODO: Automatic Slow Mode for bridge channel on spam (possible?)
     // TODO: Automatic message drop on spam (with prior announcement) (message rate threshold?)
 
-    private final BlockingQueue<ChatMessage> d2mQueue;
+    private final BlockingQueue<Message> d2mQueue;
     private final Long bridgeChannelId;
     private final List<Long> adminIds;
     private final char commandPrefix;
@@ -42,7 +45,7 @@ public class DiscordBot extends ListenerAdapter {
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<ChatMessage> m2dQueue, BlockingQueue<ChatMessage> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
+    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
 
         this.d2mQueue = d2mQueue;
         this.bridgeChannelId = bridgeChannelId;
@@ -120,11 +123,16 @@ public class DiscordBot extends ListenerAdapter {
                 if (m2dQueue.peek() == null) {
                     return;
                 }
-                antiFlood.icrementM2dCounter();
-                ChatMessage chatMessage = m2dQueue.poll();
-                if (m2dEnabled && !antiFlood.isM2dFloodThresholdReached()) {
-                    sendMessageToDiscord(chatMessage);
+                Message message = m2dQueue.poll();
+                if (message instanceof ChatMessage) {
+                    antiFlood.icrementM2dCounter();
+                    if (m2dEnabled && !antiFlood.isM2dFloodThresholdReached()) {
+                        sendMessageToDiscord((ChatMessage) message);
+                    }
+                } else if (message instanceof ConfigMessage) {
+                    parseConfigMessage((ConfigMessage) message);
                 }
+
             }
         }, 0, 100);
 
@@ -144,6 +152,12 @@ public class DiscordBot extends ListenerAdapter {
     public void sendMessageToMinecraft(ChatMessage message) {
         if (!d2mQueue.offer(message)) {
             Log.warn("Unable to insert Discord message into Minecraft send queue, message dropped... Something seems wrong, check your logs!");
+        }
+    }
+
+    public void sendMessageToMinecraft(RawMessage message) {
+        if (!d2mQueue.offer(message)) {
+            Log.warn("Unable to insert raw message into Minecraft send queue, message dropped... Something seems wrong, check your logs!");
         }
     }
 
@@ -173,10 +187,10 @@ public class DiscordBot extends ListenerAdapter {
             if (!raw.isEmpty() && raw.charAt(0) == commandPrefix && raw.length() > 1) {
                 List<String> messageElements = Arrays.asList(raw.substring(1).split(" "));
                 if (messageElements.size() == 1) {
-                    runCommand(messageElements.get(0), Collections.emptyList(), event.getAuthor());
+                    processCommand(messageElements.get(0), Collections.emptyList(), event.getAuthor());
                     return;
                 } else if (messageElements.size() > 1) {
-                    runCommand(messageElements.get(0), messageElements.subList(1, messageElements.size()), event.getAuthor());
+                    processCommand(messageElements.get(0), messageElements.subList(1, messageElements.size()), event.getAuthor());
                     return;
                 }
             }
@@ -192,9 +206,12 @@ public class DiscordBot extends ListenerAdapter {
 
     }
 
-    private void runCommand(String command, List<String> args, User author) {
+    private void processCommand(String command, List<String> args, User author) {
         Log.info(author.getName() + " (" + author.getIdLong() + ") issued command: " + command + " with arguments: " + args.toString());
         commandProcessor.processCommand(command, args);
+    }
+
+    private void parseConfigMessage(ConfigMessage message) {
     }
 
     public JDA getJda() {
@@ -215,10 +232,6 @@ public class DiscordBot extends ListenerAdapter {
 
     public Long getBridgeChannelId() {
         return bridgeChannelId;
-    }
-
-    public BlockingQueue<ChatMessage> getD2mQueue() {
-        return d2mQueue;
     }
 
     public boolean getM2dEnabled() {

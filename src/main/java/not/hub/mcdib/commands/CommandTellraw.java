@@ -1,7 +1,7 @@
 package not.hub.mcdib.commands;
 
 import not.hub.mcdib.DiscordBot;
-import not.hub.mcdib.messages.ChatMessage;
+import not.hub.mcdib.messages.RawMessage;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public class CommandTellraw extends Command {
 
     @Override
     public void run(List<String> args) {
-        getBot().sendMessageToMinecraft(new ChatMessage(String.join(" ", args)));
+        getBot().sendMessageToMinecraft(new RawMessage(String.join(" ", args)));
     }
 
 }

@@ -1,7 +1,7 @@
 package not.hub.mcdib.commands;
 
 import not.hub.mcdib.DiscordBot;
-import not.hub.mcdib.messages.ChatMessage;
+import not.hub.mcdib.messages.InfoMessage;
 
 import java.util.List;
 
@@ -43,8 +43,8 @@ public abstract class Command {
         return name.hashCode();
     }
 
-    public void sendToDiscord(String message) {
-        bot.sendMessageToDiscord(new ChatMessage("\uD83E\uDD16", message));
+    public void sendInfoToDiscord(String message) {
+        bot.sendMessageToDiscord(new InfoMessage(message));
     }
 
     public String getName() {

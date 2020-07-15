@@ -14,7 +14,7 @@ public class CommandSlowmode extends Command {
 
     @Override
     public void run(List<String> args) {
-        sendToDiscord("Hi there, you ran the slowmode command: " + args.toString() + " This Command is not implemented yet. :(");
+        sendInfoToDiscord("Hi there, you ran the slowmode command: " + args.toString() + " This Command is not implemented yet. :(");
     }
 
 }

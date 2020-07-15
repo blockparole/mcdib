@@ -23,7 +23,7 @@ public class CommandRelay extends Command {
         String stateInput = args.get(0).toLowerCase();
 
         if (stateInput.isEmpty()) {
-            sendToDiscord(failMessage);
+            sendInfoToDiscord(failMessage);
             return;
         }
 
@@ -33,7 +33,7 @@ public class CommandRelay extends Command {
         } else if (State.OFF.getValues().contains(stateInput)) {
             state = State.OFF;
         } else {
-            sendToDiscord(failMessage);
+            sendInfoToDiscord(failMessage);
             return;
         }
 
@@ -47,7 +47,7 @@ public class CommandRelay extends Command {
             } else if (Relay.MINECRAFT.getValues().contains(relayInput)) {
                 relay = Relay.MINECRAFT;
             } else if (!relayInput.isEmpty()) {
-                sendToDiscord(failMessage);
+                sendInfoToDiscord(failMessage);
                 return;
             } else {
                 relay = Relay.BOTH;
@@ -55,13 +55,13 @@ public class CommandRelay extends Command {
         }
 
         if (relay.equals(Relay.DISCORD)) {
-            sendToDiscord("Relay Discord -> Minecraft status: " + state);
+            sendInfoToDiscord("Relay Discord -> Minecraft status: " + state);
             getBot().setD2mEnabled(state.getState());
         } else if (relay.equals(Relay.MINECRAFT)) {
-            sendToDiscord("Relay Discord <- Minecraft status: " + state);
+            sendInfoToDiscord("Relay Discord <- Minecraft status: " + state);
             getBot().setM2dEnabled(state.getState());
         } else {
-            sendToDiscord("Relay Discord -> Minecraft status: " + state + "\n" + "Relay Discord <- Minecraft status: " + state);
+            sendInfoToDiscord("Relay Discord -> Minecraft status: " + state + "\n" + "Relay Discord <- Minecraft status: " + state);
             getBot().setD2mEnabled(state.getState());
             getBot().setM2dEnabled(state.getState());
         }

@@ -18,18 +18,19 @@ public class CommandFlood extends Command {
     public void run(List<String> args) {
 
         if (args.size() == 0) {
-            sendToDiscord(generateInfoMessage());
+            sendInfoToDiscord(generateInfoMessage());
             return;
         }
 
         if (args.size() != 2) {
-            sendToDiscord(generateFailMessage());
+            sendInfoToDiscord(generateFailMessage());
             return;
         }
 
         boolean isNoRelay = false;
         Relay relay;
         String relayInput = args.get(0).toLowerCase();
+        // TODO: Implement Relay.BOTH
         if (Relay.DISCORD.getValues().contains(relayInput)) {
             relay = Relay.DISCORD;
         } else if (Relay.MINECRAFT.getValues().contains(relayInput)) {
@@ -48,7 +49,7 @@ public class CommandFlood extends Command {
         }
 
         if (!isNoNumber && (messagesPerSecond < 1 || messagesPerSecond > 60)) {
-            sendToDiscord(generateFailMessage());
+            sendInfoToDiscord(generateFailMessage());
             return;
         }
 
@@ -64,7 +65,7 @@ public class CommandFlood extends Command {
         }
 
         if (isNoRelay || isNoNumber && isNoBoolean) {
-            sendToDiscord(generateFailMessage());
+            sendInfoToDiscord(generateFailMessage());
             return;
         }
 
@@ -72,19 +73,19 @@ public class CommandFlood extends Command {
             // number value
             if (relay.equals(Relay.DISCORD)) {
                 getBot().getAntiFlood().setD2mMinuteAverageLimit(messagesPerSecond);
-                sendToDiscord("Discord to Minecraft Antiflood limit is now: " + messagesPerSecond + " messages per second");
+                sendInfoToDiscord("Discord to Minecraft Antiflood limit is now: " + messagesPerSecond + " messages per second");
             } else {
                 getBot().getAntiFlood().setM2dMinuteAverageLimit(messagesPerSecond);
-                sendToDiscord("Minecraft to Discord Antiflood limit is now: " + messagesPerSecond + " messages per second");
+                sendInfoToDiscord("Minecraft to Discord Antiflood limit is now: " + messagesPerSecond + " messages per second");
             }
         } else {
             // boolean value
             if (relay.equals(Relay.DISCORD)) {
                 getBot().getAntiFlood().setD2mAntifloodActive(state.getState());
-                sendToDiscord("Discord to Minecraft Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
+                sendInfoToDiscord("Discord to Minecraft Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
             } else {
                 getBot().getAntiFlood().setM2dAntifloodActive(state.getState());
-                sendToDiscord("Minecraft to Discord Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
+                sendInfoToDiscord("Minecraft to Discord Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
             }
         }
 
