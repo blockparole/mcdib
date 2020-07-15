@@ -22,17 +22,10 @@ public class CommandHelp extends Command {
                         .append("Name: ")
                         .append(command.getName())
                         .append("\n")
-                        .append("Args: ");
-                if (getMinArgs() != getMaxArgs()) {
-                    sb
-                            .append(command.getMinArgs())
-                            .append("-")
-                            .append(command.getMaxArgs());
-                } else {
-                    sb
-                            .append(command.getMinArgs());
-                }
-                sb
+                        .append("Args: ")
+                        .append(command.getMinArgs())
+                        .append("-")
+                        .append(command.getMaxArgs())
                         .append("\n")
                         .append("Description: ")
                         .append(command.getDescription());

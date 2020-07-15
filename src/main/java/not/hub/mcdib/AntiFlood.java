@@ -68,7 +68,7 @@ public class AntiFlood {
                 boolean d2mFloodOld = d2mFloodThresholdReached;
                 d2mFloodThresholdReached = d2mMinuteAverage > d2mMinuteAverageLimit;
                 if (d2mFloodThresholdReached != d2mFloodOld && d2mAntifloodActive) {
-                    bot.sendMessageToDiscord(new ChatMessage("Antiflood discord to minecraft message drop is now " + (d2mFloodThresholdReached ? "enabled!" : "disabled again")));
+                    bot.sendMessageToDiscord(new ChatMessage("Antiflood discord to minecraft relay pause " + (d2mFloodThresholdReached ? "enabled!" : "disabled again")));
                     PresenceGenerator.updatePresence(bot);
                 }
 
@@ -76,7 +76,7 @@ public class AntiFlood {
                 boolean m2dFloodOld = m2dFloodThresholdReached;
                 m2dFloodThresholdReached = m2dMinuteAverage > m2dMinuteAverageLimit;
                 if (m2dFloodThresholdReached != m2dFloodOld && m2dAntifloodActive) {
-                    bot.sendMessageToDiscord(new ChatMessage("Antiflood minecraft to discord message drop is now " + (m2dFloodThresholdReached ? "enabled!" : "disabled again")));
+                    bot.sendMessageToDiscord(new ChatMessage("Antiflood minecraft to discord relay pause " + (m2dFloodThresholdReached ? "enabled!" : "disabled again")));
                     PresenceGenerator.updatePresence(bot);
                 }
 
