@@ -28,7 +28,7 @@ public final class Mod extends JavaPlugin implements Listener {
     // ideally, nothing will ever get blocked. thread blocking can result from: TODO
     // see BlockingQueue javadoc for read/write method explanation.
     // !m2dQueue & d2mQueue are the only gates of communication to use between the threads!
-    private static final int QUEUE_CAPACITY = 100;
+    private static final int QUEUE_CAPACITY = 1000;
     private final BlockingQueue<Message> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     private final BlockingQueue<Message> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
 
@@ -46,12 +46,11 @@ public final class Mod extends JavaPlugin implements Listener {
         // everything thats not related to:
         // delivering and receiving messages from the queues,
         // delivering discord messages to mc chat and plugin init should run on this thread.
-        //noinspection ConstantConditions - this is ensured in initConfig()
         Thread botThread = new Thread(() -> discordBot = new DiscordBot(m2dQueue, d2mQueue,
                 getConfig().getString("discord-bot-auth-token"),
                 getConfig().getLong("discord-bridge-channel"),
                 getConfig().getLongList("discord-admin-user-ids"),
-                getConfig().getString("discord-command-prefix").charAt(0)));
+                getConfig().getString("discord-command-prefix")));
         botThread.start();
 
         // TODO: replace timer with observer pattern
@@ -60,10 +59,14 @@ public final class Mod extends JavaPlugin implements Listener {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
+
                 if (d2mQueue.peek() == null) {
                     return;
                 }
+
                 Message message = d2mQueue.poll();
+
+                // We receive ChatMessage, RawMessage and ConfigMessage on this channel, everything else will be ignored
                 if (message instanceof ChatMessage) {
                     sendMessageToMinecraft((ChatMessage) message);
                 } else if (message instanceof RawMessage) {
@@ -71,6 +74,7 @@ public final class Mod extends JavaPlugin implements Listener {
                 } else if (message instanceof ConfigMessage) {
                     parseConfig((ConfigMessage) message);
                 }
+
             }
         }, 0, 100);
 
@@ -150,7 +154,12 @@ public final class Mod extends JavaPlugin implements Listener {
     }
 
     private void parseConfig(ConfigMessage message) {
-
+        try {
+            getConfig().set(message.getKey(), Long.parseLong(message.getMessage()));
+        } catch (NumberFormatException e) {
+            getConfig().set(message.getKey(), message.getMessage());
+        }
+        saveConfig();
     }
 
 }

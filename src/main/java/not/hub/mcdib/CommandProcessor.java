@@ -21,6 +21,7 @@ public class CommandProcessor {
         commands.add(new CommandFlood(discordBot));
         commands.add(new CommandHelp(discordBot));
         commands.add(new CommandMcPos(discordBot));
+        commands.add(new CommandPrefix(discordBot));
         commands.add(new CommandPresence(discordBot));
         commands.add(new CommandPurge(discordBot));
         commands.add(new CommandRelay(discordBot));

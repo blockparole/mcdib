@@ -34,18 +34,18 @@ public class DiscordBot extends ListenerAdapter {
     private final BlockingQueue<Message> d2mQueue;
     private final Long bridgeChannelId;
     private final List<Long> adminIds;
-    private final char commandPrefix;
 
     private Boolean m2dEnabled;
     private Boolean d2mEnabled;
 
-    private AntiFlood antiFlood;
+    private String commandPrefix;
 
+    private AntiFlood antiFlood;
     private CommandProcessor commandProcessor;
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, char commandPrefix) {
+    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, String commandPrefix) {
 
         this.d2mQueue = d2mQueue;
         this.bridgeChannelId = bridgeChannelId;
@@ -120,17 +120,21 @@ public class DiscordBot extends ListenerAdapter {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
+
                 if (m2dQueue.peek() == null) {
                     return;
                 }
+
                 Message message = m2dQueue.poll();
-                if (message instanceof ChatMessage) {
-                    antiFlood.icrementM2dCounter();
-                    if (m2dEnabled && !antiFlood.shouldDropM2dChatMessages()) {
-                        sendMessageToDiscord((ChatMessage) message);
-                    }
-                } else if (message instanceof ConfigMessage) {
-                    parseConfigMessage((ConfigMessage) message);
+
+                // We only receive ChatMessage on this channel, everything else will be ignored
+                if (!(message instanceof ChatMessage)) {
+                    return;
+                }
+
+                antiFlood.icrementM2dCounter();
+                if (m2dEnabled && !antiFlood.shouldDropM2dChatMessages()) {
+                    sendMessageToDiscord((ChatMessage) message);
                 }
 
             }
@@ -161,6 +165,12 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
+    public void sendConfigMessage(ConfigMessage message) {
+        if (!d2mQueue.offer(message)) {
+            Log.warn("Unable to insert config message into Minecraft send queue, message dropped... Something seems wrong, check your logs!");
+        }
+    }
+
     // This wont fire if the server is not stopped normally (process killed etc.)
     public void shutdown() {
         Log.info("Shutting down JDA");
@@ -184,7 +194,7 @@ public class DiscordBot extends ListenerAdapter {
         if (adminIds.contains(event.getAuthor().getIdLong())) {
             String raw = event.getMessage().getContentRaw();
             // message cant be empty, must have prefix as first char and length must be > 1 (including prefix)
-            if (!raw.isEmpty() && raw.charAt(0) == commandPrefix && raw.length() > 1) {
+            if (!raw.isEmpty() && raw.substring(0, 1).equals(commandPrefix) && raw.length() > 1) {
                 List<String> messageElements = Arrays.asList(raw.substring(1).split(" "));
                 if (messageElements.size() == 1) {
                     processCommand(messageElements.get(0), Collections.emptyList(), event.getAuthor());
@@ -211,9 +221,6 @@ public class DiscordBot extends ListenerAdapter {
         commandProcessor.processCommand(command, args);
     }
 
-    private void parseConfigMessage(ConfigMessage message) {
-    }
-
     public JDA getJda() {
         return jda;
     }
@@ -226,8 +233,12 @@ public class DiscordBot extends ListenerAdapter {
         return commandProcessor;
     }
 
-    public char getCommandPrefix() {
+    public String getCommandPrefix() {
         return commandPrefix;
+    }
+
+    public void setCommandPrefix(String commandPrefix) {
+        this.commandPrefix = commandPrefix;
     }
 
     public Long getBridgeChannelId() {
