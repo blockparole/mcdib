@@ -7,6 +7,7 @@ import not.hub.mcdib.messages.Message;
 import not.hub.mcdib.messages.RawMessage;
 import not.hub.mcdib.utils.ChatSanitizer;
 import not.hub.mcdib.utils.Log;
+import not.hub.mcdib.utils.Snowflake;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -49,8 +50,8 @@ public final class Mod extends JavaPlugin implements Listener {
         // delivering discord messages to mc chat and plugin init should run on this thread.
         Thread botThread = new Thread(() -> discordBot = new DiscordBot(m2dQueue, d2mQueue,
                 getConfig().getString("discord-bot-auth-token"),
-                getConfig().getLong("discord-bridge-channel"),
-                getConfig().getLongList("discord-admin-user-ids"),
+                Snowflake.of(getConfig().getLong("discord-bridge-channel")),
+                Snowflake.of(getConfig().getLongList("discord-admin-user-ids")),
                 getConfig().getString("discord-command-prefix")));
         botThread.start();
 

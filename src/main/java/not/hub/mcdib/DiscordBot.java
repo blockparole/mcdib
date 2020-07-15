@@ -16,10 +16,12 @@ import not.hub.mcdib.messages.RawMessage;
 import not.hub.mcdib.utils.ChatSanitizer;
 import not.hub.mcdib.utils.Log;
 import not.hub.mcdib.utils.PresenceGenerator;
+import not.hub.mcdib.utils.Snowflake;
 
 import javax.security.auth.login.LoginException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.stream.Collectors;
 
 public class DiscordBot extends ListenerAdapter {
 
@@ -32,8 +34,8 @@ public class DiscordBot extends ListenerAdapter {
     // TODO: Automatic message drop on spam (with prior announcement) (message rate threshold?)
 
     private final BlockingQueue<Message> d2mQueue;
-    private final Long bridgeChannelId;
-    private final List<Long> adminIds;
+    private final Snowflake sfChannel;
+    private final Set<Snowflake> sfAdmins;
 
     private Boolean m2dEnabled;
     private Boolean d2mEnabled;
@@ -45,11 +47,11 @@ public class DiscordBot extends ListenerAdapter {
 
     private JDA jda;
 
-    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, long bridgeChannelId, List<Long> adminIds, String commandPrefix) {
+    public DiscordBot(BlockingQueue<Message> m2dQueue, BlockingQueue<Message> d2mQueue, String token, Snowflake sfChannel, Set<Snowflake> sfAdmins, String commandPrefix) {
 
         this.d2mQueue = d2mQueue;
-        this.bridgeChannelId = bridgeChannelId;
-        this.adminIds = adminIds;
+        this.sfChannel = sfChannel;
+        this.sfAdmins = sfAdmins;
         this.commandPrefix = commandPrefix;
 
         this.m2dEnabled = true;
@@ -102,10 +104,10 @@ public class DiscordBot extends ListenerAdapter {
             return;
         }
 
-        TextChannel bridgeChannel = jda.getTextChannelById(bridgeChannelId);
+        TextChannel bridgeChannel = jda.getTextChannelById(sfChannel.id);
 
         if (bridgeChannel == null) {
-            Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")! halting mcdib initialization...");
+            Log.warn("Unable to find bridge channel by id (" + sfChannel + ")! halting mcdib initialization...");
             return;
         }
 
@@ -145,9 +147,9 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     public void sendMessageToDiscord(ChatMessage chatMessage) {
-        TextChannel channel = jda.getTextChannelById(bridgeChannelId);
+        TextChannel channel = jda.getTextChannelById(sfChannel.id);
         if (channel == null) {
-            Log.warn("Unable to find bridge channel by id (" + bridgeChannelId + ")!");
+            Log.warn("Unable to find bridge channel by id (" + sfChannel.toString() + ")!");
             return;
         }
         channel.sendMessage(ChatSanitizer.formatToDiscord(chatMessage)).queue();
@@ -182,7 +184,7 @@ public class DiscordBot extends ListenerAdapter {
 
         // we dont want this kind of messages
         if (
-                event.getChannel().getIdLong() != bridgeChannelId
+                event.getChannel().getIdLong() != sfChannel.id
                         || event.getAuthor().isBot()
                         || !event.getMessage().isFromType(ChannelType.TEXT)
         ) {
@@ -191,7 +193,7 @@ public class DiscordBot extends ListenerAdapter {
 
         // check for command
         // check admin permissions by long id
-        if (adminIds.contains(event.getAuthor().getIdLong())) {
+        if (sfAdmins.stream().map(Snowflake::toLong).collect(Collectors.toSet()).contains(event.getAuthor().getIdLong())) {
             String raw = event.getMessage().getContentRaw();
             // message cant be empty, must have prefix as first char and length must be > 1 (including prefix)
             if (!raw.isEmpty() && raw.substring(0, 1).equals(commandPrefix) && raw.length() > 1) {
@@ -241,8 +243,8 @@ public class DiscordBot extends ListenerAdapter {
         this.commandPrefix = commandPrefix;
     }
 
-    public Long getBridgeChannelId() {
-        return bridgeChannelId;
+    public Snowflake getSfChannel() {
+        return sfChannel;
     }
 
     public boolean getM2dEnabled() {

@@ -17,20 +17,22 @@ public class CommandHelp extends Command {
             sendInfoToDiscord("Commands: " + getBot().getCommandProcessor().getCommands().stream().map(Command::getName).collect(Collectors.joining(", ")));
         } else {
             StringBuilder sb = new StringBuilder();
-            getBot().getCommandProcessor().getCommands().stream().filter(command -> command.getName().toLowerCase().equals(args.get(0).toLowerCase())).findFirst().ifPresent(command -> {
-                sb
-                        .append("Name: ")
-                        .append(command.getName())
-                        .append("\n")
-                        .append("Args: ")
-                        .append(command.getMinArgs())
-                        .append("-")
-                        .append(command.getMaxArgs())
-                        .append("\n")
-                        .append("Description: ")
-                        .append(command.getDescription());
-            });
-            sendInfoToDiscord(sb.toString());
+            getBot().getCommandProcessor().getCommands().stream().filter(command -> command.getName().toLowerCase().equals(args.get(0).toLowerCase())).findFirst().ifPresent(command -> sb
+                    .append("Name: ")
+                    .append(command.getName())
+                    .append("\n")
+                    .append("Args: ")
+                    .append(command.getMinArgs())
+                    .append("-")
+                    .append(command.getMaxArgs())
+                    .append("\n")
+                    .append("Description: ")
+                    .append(command.getDescription()));
+            if (sb.length() == 0) {
+                sendInfoToDiscord("Are you sure thats a valid command?");
+            } else {
+                sendInfoToDiscord(sb.toString());
+            }
         }
     }
 

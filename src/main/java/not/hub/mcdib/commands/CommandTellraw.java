@@ -7,8 +7,6 @@ import java.util.List;
 
 public class CommandTellraw extends Command {
 
-    // TODO: Command: tellraw style message sender
-
     public CommandTellraw(DiscordBot discordBot) {
         super("tellraw", "send raw chat messages to minecraft", 1, 64, discordBot);
     }

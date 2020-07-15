@@ -70,13 +70,6 @@ public class CommandFlood extends Command {
             return;
         }
 
-        /*
-                getConfig().addDefault("", DEFAULT_ANTIFLOOD_D2M_STATE);
-        getConfig().addDefault("", DEFAULT_ANTIFLOOD_M2D_STATE);
-        getConfig().addDefault("", DEFAULT_ANTIFLOOD_D2M_LIMIT);
-        getConfig().addDefault("", DEFAULT_ANTIFLOOD_M2D_LIMIT);
-         */
-
         if (!isNoNumber) {
             // number value
             if (relay.equals(Relay.DISCORD)) {

@@ -9,8 +9,6 @@ import java.util.List;
 
 public class CommandPurge extends Command {
 
-    // TODO: Command: purge chat history (argument: number of messages) or (argument: timestamp start deleterange)
-
     public CommandPurge(DiscordBot discordBot) {
         super("purge", "purge messages in bridge channel", 0, 1, discordBot);
     }
@@ -18,7 +16,7 @@ public class CommandPurge extends Command {
     @Override
     public void run(List<String> args) {
 
-        TextChannel channel = getBot().getJda().getTextChannelById(getBot().getBridgeChannelId());
+        TextChannel channel = getBot().getJda().getTextChannelById(getBot().getSfChannel().id);
 
         if (channel == null) {
             Log.warn("Unable to find bridge channel!");

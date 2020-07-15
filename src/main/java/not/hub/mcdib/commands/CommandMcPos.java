@@ -18,7 +18,7 @@ public class CommandMcPos extends Command {
     public void run(List<String> args) {
 
         if (!REGEX_PATTERN_MC_USER.matcher(args.get(0)).matches()) {
-            sendInfoToDiscord("Thats a valid minecraft username?");
+            sendInfoToDiscord("Are you sure thats a valid minecraft username?");
             return;
         }
 

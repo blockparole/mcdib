@@ -1,46 +1,44 @@
 package not.hub.mcdib.utils;
 
-public class Snowflake {
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-    private final long id;
+public class Snowflake implements Comparable<Snowflake> {
 
-    public Snowflake(final long id) throws InvalidSnowflakeIdValueException {
-        if (validateSnowflakeFormat(id)) {
-            this.id = id;
-        } else {
-            throw new InvalidSnowflakeIdValueException("Invalid Input for Snowflake=" + id);
-        }
+    private static final long DISCORD_EPOCH = 1420070400000L;
+    private static final long BITMASK_WORKER = 0x3E0000;
+    private static final long BITMASK_PROCESS = 0x1F000;
+
+    public final long id;
+
+    private Snowflake(final long id) {
+        this.id = id;
     }
 
-    public Snowflake(final String id) throws InvalidSnowflakeIdValueException {
-        if (!validateSnowflakeFormat(id)) {
-            throw new InvalidSnowflakeIdValueException("Invalid Input for Snowflake=" + id);
-        }
-        try {
-            this.id = Long.parseUnsignedLong(id);
-        } catch (NumberFormatException e) {
-            throw new InvalidSnowflakeIdValueException("Invalid Input for Snowflake=" + id);
-        }
+    public static Snowflake of(final long id) {
+        return new Snowflake(id);
     }
 
-    private static boolean validateSnowflakeFormat(String id) {
-        try {
-            return validateSnowflakeFormat(Long.parseLong(id));
-        } catch (NumberFormatException e) {
-            return false;
-        }
+    public static Snowflake of(final String id) {
+        return of(Long.parseUnsignedLong(id));
     }
 
-    private static boolean validateSnowflakeFormat(long id) {
-        return (int) (Math.log10(id) + 1) == 18;
+    public static Set<Snowflake> of(Collection<Long> longList) {
+        return longList.stream().map(Snowflake::of).collect(Collectors.toSet());
     }
 
-    public static long asLong(final Snowflake snowflake) {
-        return snowflake.toLong();
+    public Instant getTimestamp() {
+        return Instant.ofEpochMilli(DISCORD_EPOCH + (id >>> 22));
     }
 
-    public static String asString(final Snowflake snowflake) {
-        return snowflake.toString();
+    public long getWorkerId() {
+        return (BITMASK_WORKER & id) >>> 17;
+    }
+
+    public long getProcessId() {
+        return (BITMASK_PROCESS & id) >>> 12;
     }
 
     public long toLong() {
@@ -49,26 +47,22 @@ public class Snowflake {
 
     @Override
     public String toString() {
-        return String.valueOf(this.id);
+        return String.valueOf(id);
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Snowflake snowflake = (Snowflake) o;
-        return id == snowflake.id;
+    public int compareTo(final Snowflake o) {
+        return Long.signum((id >>> 22) - (o.id >>> 22));
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return (o instanceof Snowflake) && (((Snowflake) o).id == id);
     }
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
-    }
-
-    public static class InvalidSnowflakeIdValueException extends Exception {
-        public InvalidSnowflakeIdValueException(String message) {
-            super(message);
-        }
+        return Long.hashCode(id);
     }
 
 }
