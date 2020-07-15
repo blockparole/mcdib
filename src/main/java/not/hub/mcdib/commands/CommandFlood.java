@@ -3,6 +3,7 @@ package not.hub.mcdib.commands;
 import not.hub.mcdib.AntiFlood;
 import not.hub.mcdib.DiscordBot;
 import not.hub.mcdib.enums.Relay;
+import not.hub.mcdib.enums.State;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -26,6 +27,7 @@ public class CommandFlood extends Command {
             return;
         }
 
+        boolean isNoRelay = false;
         Relay relay;
         String relayInput = args.get(0).toLowerCase();
         if (Relay.DISCORD.getValues().contains(relayInput)) {
@@ -33,29 +35,57 @@ public class CommandFlood extends Command {
         } else if (Relay.MINECRAFT.getValues().contains(relayInput)) {
             relay = Relay.MINECRAFT;
         } else {
-            sendToDiscord(generateFailMessage());
-            return;
+            relay = null;
+            isNoRelay = true;
         }
 
-        int messagesPerSecond;
+        boolean isNoNumber = false;
+        int messagesPerSecond = 0;
         try {
             messagesPerSecond = Integer.parseInt(args.get(1));
         } catch (NumberFormatException e) {
+            isNoNumber = true;
+        }
+
+        if (!isNoNumber && (messagesPerSecond < 1 || messagesPerSecond > 60)) {
             sendToDiscord(generateFailMessage());
             return;
         }
 
-        if (messagesPerSecond < 1 || messagesPerSecond > 60) {
-            sendToDiscord(generateFailMessage());
-            return;
-        }
-
-        if (relay.equals(Relay.DISCORD)) {
-            getBot().getAntiFlood().setD2mMinuteAverageLimit(messagesPerSecond);
-            sendToDiscord("Discord to Minecraft Antiflood limit is now: " + messagesPerSecond + " messages per second");
+        boolean isNoBoolean = false;
+        State state;
+        if (State.ON.getValues().contains(args.get(1))) {
+            state = State.ON;
+        } else if (State.OFF.getValues().contains(args.get(1))) {
+            state = State.OFF;
         } else {
-            getBot().getAntiFlood().setM2dMinuteAverageLimit(messagesPerSecond);
-            sendToDiscord("Minecraft to Discord Antiflood limit is now: " + messagesPerSecond + " messages per second");
+            state = null;
+            isNoBoolean = true;
+        }
+
+        if (isNoRelay || isNoNumber && isNoBoolean) {
+            sendToDiscord(generateFailMessage());
+            return;
+        }
+
+        if (!isNoNumber) {
+            // number value
+            if (relay.equals(Relay.DISCORD)) {
+                getBot().getAntiFlood().setD2mMinuteAverageLimit(messagesPerSecond);
+                sendToDiscord("Discord to Minecraft Antiflood limit is now: " + messagesPerSecond + " messages per second");
+            } else {
+                getBot().getAntiFlood().setM2dMinuteAverageLimit(messagesPerSecond);
+                sendToDiscord("Minecraft to Discord Antiflood limit is now: " + messagesPerSecond + " messages per second");
+            }
+        } else {
+            // boolean value
+            if (relay.equals(Relay.DISCORD)) {
+                getBot().getAntiFlood().setD2mAntifloodActive(state.getState());
+                sendToDiscord("Discord to Minecraft Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
+            } else {
+                getBot().getAntiFlood().setM2dAntifloodActive(state.getState());
+                sendToDiscord("Minecraft to Discord Antiflood is now: " + (state.getState() ? "enabled" : "disabled"));
+            }
         }
 
     }
@@ -64,20 +94,20 @@ public class CommandFlood extends Command {
         AntiFlood antiFlood = getBot().getAntiFlood();
         return "Discord -> Minecraft average messages per minute: "
                 + antiFlood.getD2mMinuteAverage() + "/"
-                + antiFlood.getD2mMinuteAverageLimit()
-                + ((antiFlood.isD2mFlood()) ? ((antiFlood.isActive()) ? " (flood! currently dropping messages)" : " (flood!)") : "") + "\n"
+                + antiFlood.getD2mMinuteAverageLimit() + "\n"
+                + "(antiflood " + (antiFlood.isD2mAntifloodActive() ? "enabled" : "disabled") + ")"
+                + ((antiFlood.isD2mFloodThresholdReached()) ? ((antiFlood.isD2mAntifloodActive()) ? " (flood! currently dropping messages)" : " (flood!)") : "") + "\n"
                 + "Discord <- Minecraft average messages per minute: "
                 + antiFlood.getM2dMinuteAverage() + "/"
-                + antiFlood.getM2dMinuteAverageLimit()
-                + ((antiFlood.isM2dFlood()) ? ((antiFlood.isActive()) ? " (flood! currently dropping messages)" : " (flood!)") : "") + "\n"
-                + "Antiflood status: "
-                + (getBot().getAntiFlood().isActive() ? "enabled" : "disabled");
+                + antiFlood.getM2dMinuteAverageLimit() + "\n"
+                + "(antiflood " + (antiFlood.isM2dAntifloodActive() ? "enabled" : "disabled") + ")"
+                + ((antiFlood.isM2dFloodThresholdReached()) ? ((antiFlood.isM2dAntifloodActive()) ? " (flood! currently dropping messages)" : " (flood!)") : "");
     }
 
     private String generateFailMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("Wrong input!").append("\n")
-                .append(getBot().getCommandPrefix()).append("flood <state>").append("\n")
+                .append(getBot().getCommandPrefix()).append("flood <relay> <state>").append("\n")
                 .append(getBot().getCommandPrefix()).append("flood <relay> <limit>").append("\n");
         Stream.of(Relay.values()).forEach(relay -> {
             if (!relay.equals(Relay.BOTH)) {

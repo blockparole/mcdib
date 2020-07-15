@@ -21,19 +21,23 @@ public class AntiFlood {
     private int d2mMessagesPerSecondCounter;
     private int m2dMessagesPerSecondCounter;
 
-    private boolean active;
-
     private int d2mMinuteAverage;
     private int m2dMinuteAverage;
 
-    private int d2mMinuteAverageLimit = 30;
-    private int m2dMinuteAverageLimit = 60;
+    private boolean d2mAntifloodActive;
+    private boolean m2dAntifloodActive;
 
-    private boolean d2mFlood = false;
-    private boolean m2dFlood;
+    private int d2mMinuteAverageLimit;
+    private int m2dMinuteAverageLimit;
 
-    public AntiFlood(boolean active, DiscordBot bot) {
-        this.active = active;
+    private boolean d2mFloodThresholdReached;
+    private boolean m2dFloodThresholdReached;
+
+    public AntiFlood(boolean d2mAntifloodActive, boolean m2dAntifloodActive, int d2mMinuteAverageLimit, int m2dMinuteAverageLimit, DiscordBot bot) {
+        this.d2mAntifloodActive = d2mAntifloodActive;
+        this.m2dAntifloodActive = m2dAntifloodActive;
+        this.d2mMinuteAverageLimit = d2mMinuteAverageLimit;
+        this.m2dMinuteAverageLimit = m2dMinuteAverageLimit;
         this.bot = bot;
         this.d2mRing = new int[60];
         this.m2dRing = new int[60];
@@ -42,6 +46,7 @@ public class AntiFlood {
     }
 
     private void init() {
+
         timer.scheduleAtFixedRate(new TimerTask() {
 
             @Override
@@ -60,18 +65,18 @@ public class AntiFlood {
                 }
 
                 d2mMinuteAverage = Arrays.stream(d2mRing).sum();
-                boolean d2mFloodOld = d2mFlood;
-                d2mFlood = d2mMinuteAverage > d2mMinuteAverageLimit;
-                if (d2mFlood != d2mFloodOld && active) {
-                    bot.sendMessageToDiscord(new ChatMessage("Antiflood discord to minecraft message drop is now " + (d2mFlood ? "enabled!" : "disabled again")));
+                boolean d2mFloodOld = d2mFloodThresholdReached;
+                d2mFloodThresholdReached = d2mMinuteAverage > d2mMinuteAverageLimit;
+                if (d2mFloodThresholdReached != d2mFloodOld && d2mAntifloodActive) {
+                    bot.sendMessageToDiscord(new ChatMessage("Antiflood discord to minecraft message drop is now " + (d2mFloodThresholdReached ? "enabled!" : "disabled again")));
                     PresenceGenerator.updatePresence(bot);
                 }
 
                 m2dMinuteAverage = Arrays.stream(m2dRing).sum();
-                boolean m2dFloodOld = m2dFlood;
-                m2dFlood = m2dMinuteAverage > m2dMinuteAverageLimit;
-                if (m2dFlood != m2dFloodOld && active) {
-                    bot.sendMessageToDiscord(new ChatMessage("Antiflood minecraft to discord message drop is now " + (m2dFlood ? "enabled!" : "disabled again")));
+                boolean m2dFloodOld = m2dFloodThresholdReached;
+                m2dFloodThresholdReached = m2dMinuteAverage > m2dMinuteAverageLimit;
+                if (m2dFloodThresholdReached != m2dFloodOld && m2dAntifloodActive) {
+                    bot.sendMessageToDiscord(new ChatMessage("Antiflood minecraft to discord message drop is now " + (m2dFloodThresholdReached ? "enabled!" : "disabled again")));
                     PresenceGenerator.updatePresence(bot);
                 }
 
@@ -88,24 +93,28 @@ public class AntiFlood {
         m2dMessagesPerSecondCounter++;
     }
 
-    public void activate() {
-        this.active = true;
+    public boolean isD2mAntifloodActive() {
+        return d2mAntifloodActive;
     }
 
-    public void deactivate() {
-        this.active = false;
+    public void setD2mAntifloodActive(boolean d2mAntifloodActive) {
+        this.d2mAntifloodActive = d2mAntifloodActive;
     }
 
-    public boolean isActive() {
-        return active;
+    public boolean isM2dAntifloodActive() {
+        return m2dAntifloodActive;
     }
 
-    public boolean isD2mFlood() {
-        return d2mFlood;
+    public void setM2dAntifloodActive(boolean m2dAntifloodActive) {
+        this.m2dAntifloodActive = m2dAntifloodActive;
     }
 
-    public boolean isM2dFlood() {
-        return m2dFlood;
+    public boolean isD2mFloodThresholdReached() {
+        return d2mFloodThresholdReached;
+    }
+
+    public boolean isM2dFloodThresholdReached() {
+        return m2dFloodThresholdReached;
     }
 
     public double getD2mMinuteAverage() {
