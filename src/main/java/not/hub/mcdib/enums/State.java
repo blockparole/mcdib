@@ -7,8 +7,8 @@ import java.util.List;
 
 public enum State {
 
-    ON(new AbstractMap.SimpleEntry<>(Boolean.TRUE, Lists.newArrayList("on", "true", "yes", "y"))),
-    OFF(new AbstractMap.SimpleEntry<>(Boolean.FALSE, Lists.newArrayList("off", "false", "no", "n")));
+    ON(new AbstractMap.SimpleEntry<>(Boolean.TRUE, Lists.newArrayList("true", "on", "yes", "y", "1", "enable"))),
+    OFF(new AbstractMap.SimpleEntry<>(Boolean.FALSE, Lists.newArrayList("false", "off", "no", "n", "0", "disable")));
 
     private final Boolean state;
     private final List<String> values;

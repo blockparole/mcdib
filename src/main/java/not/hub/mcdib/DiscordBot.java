@@ -109,7 +109,7 @@ public class DiscordBot extends ListenerAdapter {
             return;
         }
 
-        antiFlood = new AntiFlood(true, true, 30, 60, this);
+        antiFlood = new AntiFlood(true, true, 15, 30, this);
         commandProcessor = new CommandProcessor(bridgeChannel, this);
 
         PresenceGenerator.updatePresence(this);
@@ -126,7 +126,7 @@ public class DiscordBot extends ListenerAdapter {
                 Message message = m2dQueue.poll();
                 if (message instanceof ChatMessage) {
                     antiFlood.icrementM2dCounter();
-                    if (m2dEnabled && !antiFlood.isM2dFloodThresholdReached()) {
+                    if (m2dEnabled && !antiFlood.shouldDropM2dChatMessages()) {
                         sendMessageToDiscord((ChatMessage) message);
                     }
                 } else if (message instanceof ConfigMessage) {
@@ -198,7 +198,7 @@ public class DiscordBot extends ListenerAdapter {
 
         // relay discord chat to mc
         antiFlood.icrementD2mCounter();
-        if (d2mEnabled && !antiFlood.isD2mFloodThresholdReached()) {
+        if (d2mEnabled && !antiFlood.shouldDropD2mChatMessages()) {
             String message = event.getMessage().getContentRaw();
             if (ChatSanitizer.filterToMc(message).isEmpty()) return;
             sendMessageToMinecraft(new ChatMessage(event.getAuthor().getName(), message));

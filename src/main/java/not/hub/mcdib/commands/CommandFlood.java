@@ -96,13 +96,13 @@ public class CommandFlood extends Command {
         return "Discord -> Minecraft average messages per minute: "
                 + antiFlood.getD2mMinuteAverage() + "/"
                 + antiFlood.getD2mMinuteAverageLimit() + "\n"
-                + "(antiflood " + (antiFlood.isD2mAntifloodActive() ? "enabled" : "disabled") + ")"
-                + ((antiFlood.isD2mFloodThresholdReached()) ? ((antiFlood.isD2mAntifloodActive()) ? " (flood! currently dropping messages)" : " (flood!)") : "") + "\n"
+                + "(Status: " + (antiFlood.isD2mAntifloodActive() ? "enabled" : "disabled") + ")"
+                + ((antiFlood.shouldDropD2mChatMessages()) ? " (flood! currently dropping messages)" : " ") + "\n"
                 + "Discord <- Minecraft average messages per minute: "
                 + antiFlood.getM2dMinuteAverage() + "/"
                 + antiFlood.getM2dMinuteAverageLimit() + "\n"
-                + "(antiflood " + (antiFlood.isM2dAntifloodActive() ? "enabled" : "disabled") + ")"
-                + ((antiFlood.isM2dFloodThresholdReached()) ? ((antiFlood.isM2dAntifloodActive()) ? " (flood! currently dropping messages)" : " (flood!)") : "");
+                + "(Status: " + (antiFlood.isM2dAntifloodActive() ? "enabled" : "disabled") + ")"
+                + ((antiFlood.shouldDropM2dChatMessages()) ? " (flood! currently dropping messages)" : " ") + "";
     }
 
     private String generateFailMessage() {

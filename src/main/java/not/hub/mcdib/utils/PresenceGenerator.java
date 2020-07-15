@@ -18,8 +18,8 @@ public class PresenceGenerator {
 
     public static void updatePresence(DiscordBot bot) {
         AbstractMap.SimpleEntry<OnlineStatus, Activity> presence = generateActivity(
-                bot.getD2mEnabled() && !(bot.getAntiFlood().isD2mAntifloodActive() && bot.getAntiFlood().isD2mFloodThresholdReached()),
-                bot.getM2dEnabled() && !(bot.getAntiFlood().isM2dAntifloodActive() && bot.getAntiFlood().isM2dFloodThresholdReached()));
+                bot.getD2mEnabled() && !(bot.getAntiFlood().shouldDropD2mChatMessages()),
+                bot.getM2dEnabled() && !(bot.getAntiFlood().shouldDropM2dChatMessages()));
         bot.getJda().getPresence().setPresence(presence.getKey(), presence.getValue());
     }
 

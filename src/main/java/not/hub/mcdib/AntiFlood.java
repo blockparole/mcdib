@@ -1,5 +1,6 @@
 package not.hub.mcdib;
 
+import not.hub.mcdib.enums.Relay;
 import not.hub.mcdib.messages.InfoMessage;
 import not.hub.mcdib.utils.PresenceGenerator;
 
@@ -27,11 +28,11 @@ public class AntiFlood {
     private boolean d2mAntifloodActive;
     private boolean m2dAntifloodActive;
 
-    private int d2mMinuteAverageLimit;
-    private int m2dMinuteAverageLimit;
-
     private boolean d2mFloodThresholdReached;
     private boolean m2dFloodThresholdReached;
+
+    private int d2mMinuteAverageLimit;
+    private int m2dMinuteAverageLimit;
 
     public AntiFlood(boolean d2mAntifloodActive, boolean m2dAntifloodActive, int d2mMinuteAverageLimit, int m2dMinuteAverageLimit, DiscordBot bot) {
         this.d2mAntifloodActive = d2mAntifloodActive;
@@ -64,25 +65,41 @@ public class AntiFlood {
                     ringIndex = 0;
                 }
 
+                // TODO: BUG: if floodThresholdReached is true antifloodActive is false
+                // when setting antifloodActive to true (CommandFlood -flood dc yes), the call of sendAntiFloodPauseMessage is skipped!
+
                 d2mMinuteAverage = Arrays.stream(d2mRing).sum();
-                boolean d2mFloodOld = d2mFloodThresholdReached;
+                boolean d2mFloodThresholdReachedOld = d2mFloodThresholdReached;
                 d2mFloodThresholdReached = d2mMinuteAverage > d2mMinuteAverageLimit;
-                if (d2mFloodThresholdReached != d2mFloodOld && d2mAntifloodActive) {
-                    bot.sendMessageToDiscord(new InfoMessage("Antiflood discord to minecraft relay pause " + (d2mFloodThresholdReached ? "enabled!" : "disabled again")));
-                    PresenceGenerator.updatePresence(bot);
+                if (d2mFloodThresholdReached != d2mFloodThresholdReachedOld) {
+                    if (d2mAntifloodActive) {
+                        sendAntiFloodPauseMessage(Relay.DISCORD, d2mFloodThresholdReached);
+                    } else if (!d2mFloodThresholdReached) {
+                        sendAntiFloodPauseMessage(Relay.DISCORD, d2mFloodThresholdReached);
+                    }
                 }
 
                 m2dMinuteAverage = Arrays.stream(m2dRing).sum();
-                boolean m2dFloodOld = m2dFloodThresholdReached;
+                boolean m2dFloodThresholdReachedOld = m2dFloodThresholdReached;
                 m2dFloodThresholdReached = m2dMinuteAverage > m2dMinuteAverageLimit;
-                if (m2dFloodThresholdReached != m2dFloodOld && m2dAntifloodActive) {
-                    bot.sendMessageToDiscord(new InfoMessage("Antiflood minecraft to discord relay pause " + (m2dFloodThresholdReached ? "enabled!" : "disabled again")));
-                    PresenceGenerator.updatePresence(bot);
+                if (m2dFloodThresholdReached != m2dFloodThresholdReachedOld) {
+                    if (m2dAntifloodActive) {
+                        sendAntiFloodPauseMessage(Relay.MINECRAFT, m2dFloodThresholdReached);
+                    } else if (!m2dFloodThresholdReached) {
+                        sendAntiFloodPauseMessage(Relay.MINECRAFT, m2dFloodThresholdReached);
+                    }
                 }
 
             }
         }, 0, 1000);
 
+    }
+
+    private void sendAntiFloodPauseMessage(Relay relay, boolean d2mFloodThresholdReached) {
+        bot.sendMessageToDiscord(new InfoMessage("Antiflood "
+                + (relay.equals(Relay.DISCORD) ? "discord to minecraft" : "minecraft to discord")
+                + " relay pause " + (d2mFloodThresholdReached ? "enabled!" : "disabled again")));
+        PresenceGenerator.updatePresence(bot);
     }
 
     public void icrementD2mCounter() {
@@ -91,6 +108,14 @@ public class AntiFlood {
 
     public void icrementM2dCounter() {
         m2dMessagesPerSecondCounter++;
+    }
+
+    public boolean shouldDropD2mChatMessages() {
+        return d2mAntifloodActive && d2mFloodThresholdReached;
+    }
+
+    public boolean shouldDropM2dChatMessages() {
+        return m2dAntifloodActive && m2dFloodThresholdReached;
     }
 
     public boolean isD2mAntifloodActive() {
@@ -107,14 +132,6 @@ public class AntiFlood {
 
     public void setM2dAntifloodActive(boolean m2dAntifloodActive) {
         this.m2dAntifloodActive = m2dAntifloodActive;
-    }
-
-    public boolean isD2mFloodThresholdReached() {
-        return d2mFloodThresholdReached;
-    }
-
-    public boolean isM2dFloodThresholdReached() {
-        return m2dFloodThresholdReached;
     }
 
     public double getD2mMinuteAverage() {
