@@ -29,7 +29,7 @@ public final class Mod extends JavaPlugin implements Listener {
     // but the mc thread will never get blocked by reading or writing the queues.
     // ideally, nothing will ever get blocked. thread blocking can result from: TODO
     // see BlockingQueue javadoc for read/write method explanation.
-    // !m2dQueue & d2mQueue are the only gates of communication to use between the threads!
+    // m2dQueue & d2mQueue are the only gates of communication to use between the threads!
     private static final int QUEUE_CAPACITY = 1000;
     private final BlockingQueue<Message> m2dQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     private final BlockingQueue<Message> d2mQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
