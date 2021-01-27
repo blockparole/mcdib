@@ -4,4 +4,4 @@ version: ${project.version}
 api-version: ${api.version}
 prefix: ${mod.prefix}
 main: ${project.groupId}.${project.artifactId}.Mod
-authors: [blockparole]
+authors: [nothub]
